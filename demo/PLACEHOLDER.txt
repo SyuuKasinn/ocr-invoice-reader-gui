@@ -1,0 +1,23 @@
+Demo GIF Placeholder
+
+The demo.gif file will be created when you record the application demonstration.
+
+Follow these steps:
+
+1. Run the recording script:
+   Windows: .\record_demo.ps1
+   Linux/Mac: ./record_demo.sh
+
+2. Or manually:
+   - Install ScreenToGif (Windows) / Peek (Linux) / Kap (macOS)
+   - Launch the GUI: python ocr_gui.py
+   - Record the demonstration
+   - Save as demo/demo.gif
+
+3. Target specifications:
+   - Duration: 10-20 seconds
+   - File size: Under 5MB (preferably 2-3MB)
+   - Frame rate: 10-15 FPS
+   - Resolution: ~1000x800
+
+See RECORDING_GUIDE.md for detailed instructions.

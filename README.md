@@ -8,6 +8,14 @@ A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Based on](https://img.shields.io/badge/based%20on-ocr--invoice--reader-orange)](https://github.com/SyuuKasinn/ocr-invoice-reader)
 
+## 🎥 Demo
+
+![OCR Invoice Reader GUI Demo](demo/demo.gif)
+
+*Drag & drop your invoice or waybill, click process, and view OCR results instantly with color-coded visualization*
+
+> **Note**: Demo GIF will be added soon. See [RECORDING_GUIDE.md](RECORDING_GUIDE.md) for how the demo was created.
+
 ## ✨ Features
 
 - **🎯 Drag & Drop Interface**: Simply drag PDF or image files into the application

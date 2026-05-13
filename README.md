@@ -10,11 +10,35 @@ A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/
 
 ## 🎥 Demo
 
-![OCR Invoice Reader GUI Demo](demo/demo.gif)
+### Input Example
 
-*Drag & drop your invoice or waybill, click process, and view OCR results instantly with color-coded visualization*
+<table>
+<tr>
+<td width="50%">
 
-> **Note**: Demo GIF will be added soon. See [RECORDING_GUIDE.md](RECORDING_GUIDE.md) for how the demo was created.
+**Sample Document**
+
+![Sample Waybill](demo/sample-input.jpg)
+
+*International express waybill - Input document*
+
+</td>
+<td width="50%">
+
+**How to Use**
+
+1. 📁 Drag & drop this file into the GUI
+2. ⚙️ Select language (e.g., `ch` for Chinese/English mixed)
+3. 🚀 Click "Process Document"
+4. 📊 View results in multiple tabs:
+   - Visualization with OCR boxes
+   - JSON structured data
+   - Extracted text
+   - HTML tables
+
+</td>
+</tr>
+</table>
 
 ## ✨ Features
 

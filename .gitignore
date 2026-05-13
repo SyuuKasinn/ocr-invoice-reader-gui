@@ -39,6 +39,11 @@ ocr_result_*/
 *.png
 *.pdf
 
+# Allow demo files
+!demo/*.jpg
+!demo/*.png
+!demo/*.gif
+
 # OS
 .DS_Store
 Thumbs.db

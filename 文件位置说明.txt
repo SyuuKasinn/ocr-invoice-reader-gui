@@ -1,0 +1,56 @@
+========================================
+  文件位置说明
+========================================
+
+📍 压缩包位置
+--------------
+完整路径:
+C:\Users\kants\ocr-invoice-reader-gui\dist\OCR-Invoice-Reader-Optimized-v1.1.tar.gz
+
+大小: 193MB
+用途: 分发给他人使用
+
+📂 完整文件夹
+--------------
+完整路径:
+C:\Users\kants\ocr-invoice-reader-gui\dist\OCR-Invoice-Reader-Optimized\
+
+大小: 531MB (未压缩)
+包含:
+  ├── OCR-Invoice-Reader-Optimized.exe  ← 主程序
+  ├── _internal/                         ← 依赖库
+  ├── demo/                              ← 示例
+  └── 使用说明.txt
+
+🌐 GitHub状态
+--------------
+✅ 源码已推送
+   https://github.com/SyuuKasinn/ocr-invoice-reader-gui
+
+⚠️  压缩包未上传 (dist/被.gitignore忽略)
+   需要手动创建Release上传
+
+📦 如何分发
+--------------
+方式1: 本地分发
+  - 直接发送压缩包
+  - 或复制整个文件夹
+
+方式2: GitHub Release (推荐)
+  1. 访问: https://github.com/SyuuKasinn/ocr-invoice-reader-gui/releases
+  2. 点击 "Create a new release"
+  3. 上传: OCR-Invoice-Reader-Optimized-v1.1.tar.gz
+  4. 发布后其他人可以下载
+
+📖 详细说明
+--------------
+查看: 如何创建GitHub_Release.md
+
+========================================
+
+🎯 快速测试
+-----------
+cd C:\Users\kants\ocr-invoice-reader-gui\dist\OCR-Invoice-Reader-Optimized
+双击 OCR-Invoice-Reader-Optimized.exe
+
+========================================

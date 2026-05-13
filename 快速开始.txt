@@ -1,0 +1,52 @@
+========================================
+OCR Invoice Reader v1.1 - 快速开始
+========================================
+
+🎉 优化版已构建成功！
+
+📍 位置
+-------
+dist/OCR-Invoice-Reader-Optimized/
+
+📂 文件
+-------
+├── OCR-Invoice-Reader-Optimized.exe  ← 双击运行
+├── _internal/                         ← 依赖库 (不要删除)
+├── demo/                              ← 示例文件
+└── 使用说明.txt                       ← 详细说明
+
+⚡ 性能提升
+----------
+启动:  5秒 → 2秒    (快2.5倍)
+识别:  15秒 → 3秒   (快5倍,第2次起)
+
+🚀 使用方法
+----------
+1. 双击 OCR-Invoice-Reader-Optimized.exe
+2. 等待启动画面 (首次约10秒)
+3. 拖放PDF/图片文件
+4. 点击 "Process Document"
+
+💡 提示
+-------
+- 首次运行会下载模型 (~300MB)
+- 第2次起识别超快 (3秒)
+- 可勾选GPU加速 (再快1倍)
+
+📦 分发
+-------
+压缩包: OCR-Invoice-Reader-Optimized-v1.1.tar.gz
+大小: 193MB (已压缩) / 531MB (完整)
+
+📖 文档
+-------
+- PERFORMANCE_OPTIMIZATION.md (性能优化)
+- PACKAGING_GUIDE.md (打包指南)
+- BUILD_SUCCESS.md (构建总结)
+
+🌐 GitHub
+---------
+https://github.com/SyuuKasinn/ocr-invoice-reader-gui
+(已更新,包含所有优化代码)
+
+========================================

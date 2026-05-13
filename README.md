@@ -10,35 +10,81 @@ A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/
 
 ## 🎥 Demo
 
-### Input Example
+### Application Interface
 
 <table>
 <tr>
 <td width="50%">
 
-**Sample Document**
+**1. Launch & Drag File**
 
-![Sample Waybill](demo/sample-input.jpg)
+![Empty GUI](demo/screenshot-01-empty.png)
 
-*International express waybill - Input document*
+*Clean interface with drop zone*
 
 </td>
 <td width="50%">
 
-**How to Use**
+**2. File Loaded**
 
-1. 📁 Drag & drop this file into the GUI
-2. ⚙️ Select language (e.g., `ch` for Chinese/English mixed)
-3. 🚀 Click "Process Document"
-4. 📊 View results in multiple tabs:
-   - Visualization with OCR boxes
-   - JSON structured data
-   - Extracted text
-   - HTML tables
+![File Loaded](demo/screenshot-02-loaded.png)
+
+*Ready to process*
 
 </td>
 </tr>
 </table>
+
+### OCR Results Display
+
+<table>
+<tr>
+<td width="50%">
+
+**3. Visualization Tab**
+
+![Visualization](demo/screenshot-04-visualization.png)
+
+*OCR detection with color-coded regions: Red (text boxes), Orange (tables), Blue (titles), Green (text regions)*
+
+</td>
+<td width="50%">
+
+**4. JSON Data Tab**
+
+![JSON Data](demo/screenshot-05-json.png)
+
+*Structured output with coordinates and confidence scores*
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**5. Extracted Text Tab**
+
+![Extracted Text](demo/screenshot-06-text.png)
+
+*Plain text extraction from all regions*
+
+</td>
+<td width="50%">
+
+**6. HTML Tables Tab**
+
+![HTML Tables](demo/screenshot-07-tables.png)
+
+*Formatted table data with structure preserved*
+
+</td>
+</tr>
+</table>
+
+### Input Document
+
+![Sample Waybill](demo/sample-input.jpg)
+
+*Sample: International express waybill with mixed Chinese/English text*
 
 ## ✨ Features
 

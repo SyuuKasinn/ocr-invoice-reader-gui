@@ -17,18 +17,40 @@ A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/
 - **📑 Tabbed Results View**: Visualization, JSON data, extracted text, and HTML tables
 - **💻 Cross-platform**: Works on Windows, macOS, and Linux
 
-## 🖼️ Screenshots
+## 🖼️ Interface Preview
 
 ### Main Interface
 The application features a clean, intuitive interface with:
 - **Left Panel**: Drag-and-drop zone, settings, and process button
 - **Right Panel**: Tabbed view for visualization and results
 
+```
+┌─────────────────────────────────────────────┐
+│  🖼️ OCR Invoice Reader                      │
+├──────────────┬──────────────────────────────┤
+│ 📥 Drop Zone │ [📊 Visualization] [📋 JSON] │
+│              │ [📝 Text] [🔢 Tables]        │
+│  Drag files  │                              │
+│  here or     │    Results Display           │
+│  browse      │    (OCR visualization,       │
+│              │     colored boxes,           │
+│ ⚙️ Settings   │     extracted data)          │
+│ • Language   │                              │
+│ • Mode       │                              │
+│ • GPU        │                              │
+│              │                              │
+│ [🚀 Process] │                              │
+│ [Progress]   │                              │
+└──────────────┴──────────────────────────────┘
+│ Status: Ready to process                    │
+└─────────────────────────────────────────────┘
+```
+
 ### Results Display
-- **Visualization Tab**: OCR text boxes with color-coded regions
-- **JSON Tab**: Structured data output
-- **Text Tab**: Extracted plain text
-- **Tables Tab**: HTML formatted tables
+- **Visualization Tab**: OCR text boxes with color-coded regions (red polygons, orange/blue/green boxes)
+- **JSON Tab**: Structured data output with regions, confidence scores, and table info
+- **Text Tab**: Extracted plain text from all pages
+- **Tables Tab**: HTML formatted tables for easy viewing
 
 ## 📦 Installation
 

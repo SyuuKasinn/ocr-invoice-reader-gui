@@ -1,0 +1,9 @@
+# GUI Dependencies
+tkinterdnd2>=0.3.0
+Pillow>=10.0.0
+
+# OCR Invoice Reader (install from local or GitHub)
+# Install the main OCR package first:
+# pip install -e ../ocr-invoice-reader
+# or
+# pip install git+https://github.com/SyuuKasinn/ocr-invoice-reader.git

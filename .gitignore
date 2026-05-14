@@ -1,52 +1,40 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+# Build outputs
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
+__pycache__/
+*.pyc
+*.pyo
 
-# Virtual Environment
-venv/
-ENV/
-env/
+# PyInstaller
+*.spec
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
-
-# OCR Results (temporary files)
-results/
-ocr_result_*/
-*.jpg
-*.png
-*.pdf
-
-# Allow demo files
-!demo/*.jpg
-!demo/*.png
-!demo/*.gif
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
+# Temporary files
 *.log
+*.tmp
+temp/
+tmp/
+
+# Archives
+*.tar.gz
+*.zip
+*.rar
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Results
+results/
+output/

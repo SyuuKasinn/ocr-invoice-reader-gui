@@ -18,22 +18,22 @@ import time
 
 
 class SplashScreen:
-    """启动画面 - 显示加载进度"""
+    """Startup splash screen with loading progress"""
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("OCR Invoice Reader")
-        self.root.overrideredirect(True)  # 无边框窗口
+        self.root.overrideredirect(True)  # Borderless window
 
-        # 窗口大小和居中
+        # Window size and center position
         width, height = 500, 280
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f'{width}x{height}+{x}+{y}')
 
-        # 背景色
+        # Background color
         self.root.configure(bg='#2c3e50')
 
-        # Logo/标题
+        # Logo/Title
         title_label = tk.Label(
             self.root,
             text="🖼️ OCR Invoice Reader",
@@ -43,7 +43,7 @@ class SplashScreen:
         )
         title_label.pack(pady=(40, 10))
 
-        # 版本
+        # Version
         version_label = tk.Label(
             self.root,
             text="v1.0 - Fast Edition",
@@ -53,17 +53,17 @@ class SplashScreen:
         )
         version_label.pack()
 
-        # 状态标签
+        # Status label
         self.status_label = tk.Label(
             self.root,
-            text="正在初始化...",
+            text="Initializing...",
             font=('Arial', 11),
             bg='#2c3e50',
             fg='#ecf0f1'
         )
         self.status_label.pack(pady=(30, 10))
 
-        # 进度条
+        # Progress bar
         style = ttk.Style()
         style.theme_use('clam')
         style.configure("Splash.Horizontal.TProgressbar",
@@ -82,10 +82,10 @@ class SplashScreen:
         self.progress.pack(pady=10)
         self.progress.start(10)
 
-        # 提示
+        # Tip message
         tip_label = tk.Label(
             self.root,
-            text="正在加载组件,首次启动可能需要几秒钟...",
+            text="Loading components, first startup may take a few seconds...",
             font=('Arial', 9),
             bg='#2c3e50',
             fg='#95a5a6',
@@ -94,12 +94,12 @@ class SplashScreen:
         tip_label.pack(pady=(15, 30))
 
     def update_status(self, message):
-        """更新状态文本"""
+        """Update status text"""
         self.status_label.config(text=message)
         self.root.update()
 
     def destroy(self):
-        """关闭启动画面"""
+        """Close splash screen"""
         self.progress.stop()
         self.root.destroy()
 

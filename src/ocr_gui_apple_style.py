@@ -46,6 +46,11 @@ class AppleStyleGUI:
         self.current_result = None
         self.zoom_level = 1.0
 
+        # PDF multi-page support
+        self.pdf_pages = []
+        self.current_page = 0
+        self.total_pages = 0
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -156,13 +161,43 @@ class AppleStyleGUI:
                      width=5 if txt=="Reset" else 3,
                      pady=5).pack(side=tk.LEFT, padx=2)
 
-        # File label
-        self.file_label = tk.Label(left_panel, text="No file selected",
+        # File label and page controls
+        file_info_frame = tk.Frame(left_panel, bg=self.colors['bg'])
+        file_info_frame.pack(fill=tk.X, padx=30, pady=(5,10))
+
+        self.file_label = tk.Label(file_info_frame, text="No file selected",
                                    font=('Arial', 11),
                                    bg=self.colors['bg'],
                                    fg=self.colors['text_secondary'],
                                    anchor='w')
-        self.file_label.pack(fill=tk.X, padx=30, pady=(5,10))
+        self.file_label.pack(side=tk.LEFT)
+
+        # Page controls (for PDF)
+        self.page_controls = tk.Frame(file_info_frame, bg=self.colors['bg'])
+
+        self.prev_page_btn = tk.Button(self.page_controls, text="◀",
+                                       command=self.prev_page,
+                                       font=('Arial', 10, 'bold'),
+                                       bg=self.colors['bg_secondary'],
+                                       fg=self.colors['text_primary'],
+                                       relief='flat', cursor='hand2',
+                                       width=3, pady=2, state='disabled')
+        self.prev_page_btn.pack(side=tk.LEFT, padx=2)
+
+        self.page_label = tk.Label(self.page_controls, text="",
+                                   font=('Arial', 10),
+                                   bg=self.colors['bg'],
+                                   fg=self.colors['text_primary'])
+        self.page_label.pack(side=tk.LEFT, padx=8)
+
+        self.next_page_btn = tk.Button(self.page_controls, text="▶",
+                                       command=self.next_page,
+                                       font=('Arial', 10, 'bold'),
+                                       bg=self.colors['bg_secondary'],
+                                       fg=self.colors['text_primary'],
+                                       relief='flat', cursor='hand2',
+                                       width=3, pady=2, state='disabled')
+        self.next_page_btn.pack(side=tk.LEFT, padx=2)
 
         # Canvas for image with drag-drop
         canvas_frame = tk.Frame(left_panel, bg=self.colors['separator'], bd=1)
@@ -285,6 +320,10 @@ class AppleStyleGUI:
                 btn.config(fg=self.colors['text_primary'], font=('Arial', 12))
         self.text_frames[tab_name].pack(fill=tk.BOTH, expand=True)
 
+        # Update visualization when switching tabs
+        if self.annotated_image is not None:
+            self.display_image(self.annotated_image)
+
     def browse_file(self):
         """Browse file"""
         filename = filedialog.askopenfilename(
@@ -306,25 +345,137 @@ class AppleStyleGUI:
         self.update_status(f"Selected: {os.path.basename(path)}")
         self.process_btn.config(state='normal', bg=self.colors['accent'])
 
+        # Reset page controls
+        self.page_controls.pack_forget()
+        self.pdf_pages = []
+        self.current_page = 0
+        self.total_pages = 0
+
         # Load preview
         try:
-            if not path.lower().endswith('.pdf'):
+            if path.lower().endswith('.pdf'):
+                # Load PDF pages
+                self.load_pdf_preview(path)
+            else:
+                # Load image
                 self.original_image = cv2.imread(path)
                 if self.original_image is not None:
                     if self.canvas_placeholder:
                         self.canvas.delete(self.canvas_placeholder)
                         self.canvas_placeholder = None
                     self.display_image(self.original_image)
-        except:
-            pass
+        except Exception as e:
+            print(f"[ERROR] Failed to load file: {e}")
+
+    def load_pdf_preview(self, pdf_path):
+        """Load PDF pages for preview"""
+        try:
+            import fitz  # PyMuPDF
+            pdf = fitz.open(pdf_path)
+            self.total_pages = len(pdf)
+            self.pdf_pages = []
+
+            # Convert first page to image for preview
+            page = pdf[0]
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x scale
+            img_data = pix.tobytes("ppm")
+
+            # Convert to cv2 format
+            import io
+            from PIL import Image
+            pil_img = Image.open(io.BytesIO(img_data))
+            import numpy as np
+            self.original_image = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+
+            pdf.close()
+
+            # Show page controls
+            if self.total_pages > 1:
+                self.page_controls.pack(side=tk.RIGHT, padx=10)
+                self.update_page_controls()
+
+            # Display first page
+            if self.canvas_placeholder:
+                self.canvas.delete(self.canvas_placeholder)
+                self.canvas_placeholder = None
+            self.display_image(self.original_image)
+
+        except ImportError:
+            messagebox.showinfo("PDF Support", "PDF preview requires PyMuPDF.\nInstall with: pip install PyMuPDF")
+        except Exception as e:
+            print(f"[ERROR] PDF load failed: {e}")
+
+    def prev_page(self):
+        """Go to previous page"""
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.load_pdf_page(self.current_page)
+            self.update_page_controls()
+
+    def next_page(self):
+        """Go to next page"""
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.load_pdf_page(self.current_page)
+            self.update_page_controls()
+
+    def load_pdf_page(self, page_num):
+        """Load specific PDF page"""
+        try:
+            import fitz
+            pdf = fitz.open(self.current_file)
+            page = pdf[page_num]
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+            img_data = pix.tobytes("ppm")
+
+            import io
+            from PIL import Image
+            import numpy as np
+            pil_img = Image.open(io.BytesIO(img_data))
+            self.original_image = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+
+            pdf.close()
+            self.display_image(self.original_image)
+        except Exception as e:
+            print(f"[ERROR] Failed to load page: {e}")
+
+    def update_page_controls(self):
+        """Update page control states"""
+        self.page_label.config(text=f"{self.current_page + 1} / {self.total_pages}")
+
+        if self.current_page > 0:
+            self.prev_page_btn.config(state='normal')
+        else:
+            self.prev_page_btn.config(state='disabled')
+
+        if self.current_page < self.total_pages - 1:
+            self.next_page_btn.config(state='normal')
+        else:
+            self.next_page_btn.config(state='disabled')
 
     def on_file_drop(self, event):
         """Handle file drop"""
-        files = self.root.tk.splitlist(event.data)
-        if files:
-            file_path = files[0].strip('{}')
-            if file_path.lower().endswith(('.pdf', '.jpg', '.jpeg', '.png')):
-                self.load_file(file_path)
+        try:
+            # Handle different formats of dropped data
+            data = event.data
+            # Remove curly braces and quotes if present
+            if data.startswith('{') and data.endswith('}'):
+                data = data[1:-1]
+            data = data.strip('"').strip("'")
+
+            # Split multiple files (take first one)
+            files = data.split('} {')
+            if files:
+                file_path = files[0].strip('{}').strip()
+                print(f"[DEBUG] Dropped file: {file_path}")
+
+                if os.path.exists(file_path) and file_path.lower().endswith(('.pdf', '.jpg', '.jpeg', '.png')):
+                    self.load_file(file_path)
+                    return
+        except Exception as e:
+            print(f"[ERROR] Drop failed: {e}")
+
+        messagebox.showwarning("Invalid File", "Please drop a PDF or image file (JPG, PNG)")
 
     def on_drag_enter(self, event):
         """Drag enter - highlight canvas"""
@@ -450,8 +601,23 @@ class AppleStyleGUI:
             # DISPLAY IN GUI
             self.root.after(0, lambda: self.display_image(self.annotated_image))
 
+        except UnicodeEncodeError as e:
+            # Fallback: try without text if Unicode issues
+            try:
+                print(f"[WARN] Unicode error in visualization, retrying without text: {e}")
+                self.annotated_image = self.visualizer.visualize_regions(
+                    self.original_image.copy(), regions_viz,
+                    show_text=False, show_boxes=True
+                )
+                self.root.after(0, lambda: self.display_image(self.annotated_image))
+            except Exception as e2:
+                print(f"[ERROR] Visualization failed completely: {e2}")
+                # Show original image instead
+                self.root.after(0, lambda: self.display_image(self.original_image))
         except Exception as e:
             print(f"[WARN] Visualization failed: {e}")
+            # Show original image as fallback
+            self.root.after(0, lambda: self.display_image(self.original_image))
 
     def display_results(self, result):
         """Display results"""

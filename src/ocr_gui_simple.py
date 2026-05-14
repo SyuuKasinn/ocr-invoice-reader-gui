@@ -8,6 +8,9 @@ Uses EnhancedStructureAnalyzer directly from ocr-invoice-reader package
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
+from PIL import Image, ImageTk
+import cv2
+import numpy as np
 import os
 import threading
 import json
@@ -23,7 +26,12 @@ class SimpleOCRGUI:
         # State
         self.current_file = None
         self.analyzer = None
+        self.visualizer = None
         self.processing = False
+        self.original_image = None
+        self.annotated_image = None
+        self.current_result = None
+        self.zoom_level = 1.0
 
         self.setup_ui()
 

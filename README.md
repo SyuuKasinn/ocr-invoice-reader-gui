@@ -43,9 +43,10 @@ python src/ocr_gui_simple.py
 
 ## ✨ Features
 
-- ✅ **Simple & Reliable** - Only 200 lines of code
+- ✅ **Simple & Reliable** - Clean, maintainable code
 - ✅ **Fast Startup** - Launches in ~1 second
 - ✅ **On-Demand Loading** - OCR engine loads on first use
+- ✅ **Image Visualization** - Annotated images with detection boxes
 - ✅ **Multi-Language** - Chinese, English, Japanese, Korean
 - ✅ **GPU Support** - Optional GPU acceleration
 - ✅ **Cross-Platform** - Windows, macOS, Linux
@@ -75,6 +76,14 @@ Click **"Browse..."** and select a PDF or image file.
 
 ### Step 3: Process
 Click **"Process Document"** and view results in the text area.
+
+### Step 4: View Visualization
+After processing, an annotated image is saved showing:
+- **OCR text boxes** (red) - Individual text detections
+- **Region boxes** (colored by type) - Table, text, title regions
+- **Confidence scores** - Detection confidence for each region
+
+The visualization file location is shown in the results.
 
 ### First-Time Setup
 - **First run**: PaddleOCR downloads models (~300MB, one-time)

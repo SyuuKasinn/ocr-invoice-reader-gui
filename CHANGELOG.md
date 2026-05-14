@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.1.0] - 2026-05-14
+
+### 🎨 Added Visualization
+
+**New Features:**
+- ✅ **Image Visualization** - Annotated images with OCR boxes
+- ✅ **Region Highlighting** - Color-coded detection regions
+- ✅ **Automatic Export** - Visualization saved to temp folder
+- ✅ **File Location Display** - Easy access to visualization image
+
+**Technical:**
+- Integrated `OCRVisualizer` from ocr-invoice-reader
+- Draw OCR text boxes (red)
+- Draw region boxes (colored by type: table/text/title/figure)
+- Display confidence scores
+- Save annotated image automatically
+
+**Fixed:**
+- ✅ API compatibility with LayoutRegion objects
+- ✅ Proper JSON serialization
+- ✅ Better error handling
+
+---
+
 ## [2.0.0] - 2026-05-14
 
 ### 🎉 Major Refactor

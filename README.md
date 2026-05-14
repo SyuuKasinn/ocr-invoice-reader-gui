@@ -8,16 +8,17 @@ A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Performance](https://img.shields.io/badge/performance-5x%20faster-brightgreen)](docs/guides/performance-optimization.md)
 
-## ⚡ v1.2 - Optimized Edition!
+## 🎨 v2.1 - Modern Edition + PaddleOCR v4!
 
-**Latest Release:** OCR recognition now **5x faster** from 2nd scan onward!
+**Latest Release:** Complete UI redesign + 30-37% faster OCR with PaddleOCR v4!
 
-- 🚀 **Startup:** 5s → 2s (2.5x faster)
-- ⚡ **OCR Recognition:** 15s → 3s (5x faster, 2nd time onward)
-- 💡 **Pre-loaded Engine:** Load model once, reuse forever
-- 📚 **Complete Docs:** README.txt, VERSION.txt included
+- 🎨 **Modern UI:** Professional card-based design, beautiful interface
+- ⚡ **Even Faster:** PaddleOCR v4 = 30-37% speed boost on top of 5x optimization
+- 💡 **Best Performance:** 10-11s first scan, 2-3s subsequent (6.5-7x faster overall!)
+- 🚀 **Better UX:** Animated splash, smooth transitions, intuitive layout
+- 📚 **Complete Redesign:** From the ground up for professional feel
 
-[See what's new in v1.2 →](docs/releases/v1.2_notes.md) | [Test Report →](docs/releases/v1.2-test-report.md)
+[See what's new in v2.1 →](docs/releases/v2.1_notes.md) | [v1.2 Notes →](docs/releases/v1.2_notes.md)
 
 ---
 
@@ -43,9 +44,12 @@ A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/
 
 ### Windows Executable (Recommended)
 
-**Latest Release:** v1.2 - Optimized Edition ⚡
+**Latest Release:** v2.1.0 - Modern Edition + PaddleOCR v4 🎨⚡
 
-[📦 Download OCR-Invoice-Reader-Optimized-v1.2.tar.gz](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/releases/latest) (193MB)
+[📦 Download OCR-Invoice-Reader-Modern-v2.1.tar.gz](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/releases/latest) (~200MB)
+
+**Previous Release:**  
+[v1.2 - Optimized Edition](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/releases/tag/v1.2) (193MB)
 
 **What's included:**
 - ✅ Standalone executable (no Python required)
@@ -82,12 +86,12 @@ python src/ocr_gui.py
 
 ### From Executable
 
-1. Extract `OCR-Invoice-Reader-v1.1.tar.gz`
-2. Double-click `OCR-Invoice-Reader-Optimized.exe`
-3. Wait for splash screen (first run: ~10s)
-4. Drag & drop a PDF or image file
-5. Click "Process Document"
-6. View results in tabs
+1. Extract `OCR-Invoice-Reader-Modern-v2.1.tar.gz`
+2. Double-click `OCR-Invoice-Reader-Modern.exe`
+3. Enjoy the modern splash screen (first run: ~10s to download PaddleOCR v4 models)
+4. Drag & drop a PDF or image file to the upload zone
+5. Adjust settings if needed, then click "Process Document"
+6. View results in the beautiful tabbed interface
 
 ### From Source
 
@@ -95,10 +99,13 @@ python src/ocr_gui.py
 # Install dependencies
 pip install tkinterdnd2 Pillow paddleocr opencv-python
 
-# Run optimized version (faster)
+# Run modern version (v2.1 - best!)
+python src/ocr_gui_modern.py
+
+# Or run optimized version (v1.2)
 python src/ocr_gui_optimized.py
 
-# Or run original version
+# Or run original version (v1.0)
 python src/ocr_gui.py
 ```
 
@@ -184,8 +191,9 @@ ocr-invoice-reader-gui/
 ├── requirements.txt          # Python dependencies
 │
 ├── src/                      # Source code
-│   ├── ocr_gui.py           # Original GUI
-│   ├── ocr_gui_optimized.py # Optimized GUI (v1.1)
+│   ├── ocr_gui_modern.py    # Modern GUI (v2.1 - recommended)
+│   ├── ocr_gui_optimized.py # Optimized GUI (v1.2)
+│   ├── ocr_gui.py           # Original GUI (v1.0)
 │   └── common/              # Shared components
 │
 ├── build/                    # Build configuration
@@ -272,7 +280,14 @@ pytest tests/
 
 ## 📋 Changelog
 
-### v1.1 (2024-05-13) - Performance Optimized
+### v2.1.0 (2026-05-14) - Modern Edition + PaddleOCR v4
+- 🎨 **Complete UI redesign** - Modern, professional card-based interface
+- ⚡ **PaddleOCR v4** - 30-37% faster OCR recognition
+- 💫 **Enhanced UX** - Animated splash, smooth transitions
+- 🚀 **6.5-7x faster** - Combined optimization + PaddleOCR v4
+- 📚 **Better architecture** - Clean code, theme system
+
+### v1.2 (2024-05-13) - Performance Optimized
 - ⚡ **5x faster OCR** - Pre-loaded engine, no repeated model loading
 - 🚀 **2.5x faster startup** - Directory packaging instead of onefile
 - 💫 **Splash screen** - Visual loading progress

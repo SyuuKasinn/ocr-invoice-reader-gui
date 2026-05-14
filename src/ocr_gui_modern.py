@@ -759,52 +759,70 @@ class ModernOCRGUI:
     def _process_thread(self):
         """Background processing thread"""
         try:
+            print(f"[DEBUG] Starting process thread for file: {self.current_file}")
+            print(f"[DEBUG] OCR analyzer exists: {self.ocr_analyzer is not None}")
+
             if self.ocr_analyzer:
                 # Use pre-loaded analyzer (fast!)
+                print("[DEBUG] Using pre-loaded analyzer")
                 # Extract from document
                 document = self.ocr_analyzer.extract(
                     self.current_file,
                     visualize=self.visualize_var.get()
                 )
+                print(f"[DEBUG] Extraction successful, document type: {type(document)}")
 
                 # Convert to dict for display
                 result = document.model_dump() if hasattr(document, 'model_dump') else document.__dict__
+                print(f"[DEBUG] Converted to dict, keys: {list(result.keys())[:5]}")
 
                 self.current_result = result
                 self.root.after(0, self._display_results, result)
             else:
                 # Try to load analyzer now if not pre-loaded
+                print("[DEBUG] Loading analyzer on-demand")
                 self.root.after(0, lambda: self.status_var.set("⚠️ Loading OCR engine..."))
                 try:
+                    print("[DEBUG] Importing DocumentExtractor")
                     from ocr_invoice_reader import DocumentExtractor
 
                     lang = self.lang_var.get()
+                    print(f"[DEBUG] Creating extractor with lang={lang}, gpu={self.use_gpu_var.get()}")
                     self.ocr_analyzer = DocumentExtractor(
                         use_gpu=self.use_gpu_var.get(),
                         lang=lang
                     )
+                    print("[DEBUG] Extractor created successfully")
 
                     # Now process with newly loaded analyzer
+                    print("[DEBUG] Starting extraction")
                     document = self.ocr_analyzer.extract(
                         self.current_file,
                         visualize=self.visualize_var.get()
                     )
+                    print(f"[DEBUG] Extraction successful, document type: {type(document)}")
 
                     # Convert to dict for display
                     result = document.model_dump() if hasattr(document, 'model_dump') else document.__dict__
+                    print(f"[DEBUG] Converted to dict, keys: {list(result.keys())[:5]}")
 
                     self.current_result = result
                     self.root.after(0, self._display_results, result)
                 except Exception as load_error:
+                    print(f"[DEBUG] Error during loading/processing: {load_error}")
+                    import traceback
+                    traceback.print_exc()
                     error_msg = f"Failed to load OCR engine: {load_error}"
                     self.root.after(0, lambda msg=error_msg: self._show_error(msg))
 
         except Exception as e:
+            print(f"[DEBUG] Unexpected error: {e}")
             error_msg = str(e)
             import traceback
             traceback.print_exc()
             self.root.after(0, lambda msg=error_msg: self._show_error(msg))
         finally:
+            print("[DEBUG] Processing complete, cleaning up")
             self.root.after(0, self._processing_complete)
 
     # Removed _process_cli() - now always use pre-loaded analyzer for better performance

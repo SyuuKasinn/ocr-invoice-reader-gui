@@ -245,7 +245,7 @@ class SimpleOCRGUI:
                 regions_for_viz.append(region_dict)
 
             # Draw visualization
-            self.annotated_image = self.visualizer.draw_structure_result(
+            self.annotated_image = self.visualizer.visualize_regions(
                 self.original_image.copy(),
                 regions_for_viz,
                 show_text=True,

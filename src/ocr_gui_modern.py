@@ -762,17 +762,14 @@ class ModernOCRGUI:
         try:
             if self.ocr_analyzer:
                 # Use pre-loaded analyzer (fast!)
-                # Process the document
-                mode = self.mode_var.get()
-                lang = self.lang_var.get()
-
-                # Call OCR process
-                result = self.ocr_analyzer.process(
+                # Extract from document
+                document = self.ocr_analyzer.extract(
                     self.current_file,
-                    mode=mode,
-                    lang=lang,
                     visualize=self.visualize_var.get()
                 )
+
+                # Convert to dict for display
+                result = document.model_dump() if hasattr(document, 'model_dump') else document.__dict__
 
                 self.current_result = result
                 self.root.after(0, self._display_results, result)
@@ -780,20 +777,22 @@ class ModernOCRGUI:
                 # Try to load analyzer now if not pre-loaded
                 self.root.after(0, lambda: self.status_var.set("⚠️ Loading OCR engine..."))
                 try:
-                    from ocr_invoice_reader import OCRInvoiceReader
+                    from ocr_invoice_reader import DocumentExtractor
 
-                    self.ocr_analyzer = OCRInvoiceReader(use_gpu=self.use_gpu_var.get())
+                    lang = self.lang_var.get()
+                    self.ocr_analyzer = DocumentExtractor(
+                        use_gpu=self.use_gpu_var.get(),
+                        lang=lang
+                    )
 
                     # Now process with newly loaded analyzer
-                    mode = self.mode_var.get()
-                    lang = self.lang_var.get()
-
-                    result = self.ocr_analyzer.process(
+                    document = self.ocr_analyzer.extract(
                         self.current_file,
-                        mode=mode,
-                        lang=lang,
                         visualize=self.visualize_var.get()
                     )
+
+                    # Convert to dict for display
+                    result = document.model_dump() if hasattr(document, 'model_dump') else document.__dict__
 
                     self.current_result = result
                     self.root.after(0, self._display_results, result)
@@ -803,6 +802,8 @@ class ModernOCRGUI:
 
         except Exception as e:
             error_msg = str(e)
+            import traceback
+            traceback.print_exc()
             self.root.after(0, lambda msg=error_msg: self._show_error(msg))
         finally:
             self.root.after(0, self._processing_complete)
@@ -890,26 +891,30 @@ def load_ocr_engine(splash):
         time.sleep(0.2)
 
         # Import from ocr-invoice-reader
-        from ocr_invoice_reader import OCRInvoiceReader
+        from ocr_invoice_reader import DocumentExtractor
 
         splash.update_status("Initializing PaddleOCR engine...")
         time.sleep(0.2)
 
-        # Initialize OCR reader with CPU by default
-        analyzer = OCRInvoiceReader(use_gpu=False)
+        # Initialize document extractor with CPU by default
+        extractor = DocumentExtractor(use_gpu=False, lang='ch')
 
         splash.update_status("✅ OCR engine ready! (Pre-loaded)")
         time.sleep(0.3)
-        return analyzer
+        return extractor
 
     except ImportError as ie:
         splash.update_status("⚠️ OCR library not found, will load on-demand...")
         print(f"Import error: {ie}")
+        print(f"Full error: {ie.__class__.__name__}: {ie}")
         time.sleep(1)
         return None
     except Exception as e:
         splash.update_status(f"⚠️ Engine load error, will retry on first use")
         print(f"Error loading OCR: {e}")
+        print(f"Full error: {e.__class__.__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         time.sleep(1)
         return None
 

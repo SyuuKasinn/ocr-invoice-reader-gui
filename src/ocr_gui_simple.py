@@ -14,6 +14,7 @@ import numpy as np
 import os
 import threading
 import json
+import tempfile
 from pathlib import Path
 from datetime import datetime
 
@@ -199,7 +200,10 @@ class SimpleOCRGUI:
 
             print(f"[INFO] Analysis complete. Regions found: {len(result.get('regions', []))}")
 
-            # Step 3: Display results
+            # Step 3: Create visualization
+            self.create_visualization(result)
+
+            # Step 4: Display results
             self.display_results(result)
             self.update_status("✅ Processing complete!")
 
@@ -211,6 +215,54 @@ class SimpleOCRGUI:
 
         finally:
             self.root.after(0, self._processing_complete)
+
+    def create_visualization(self, result):
+        """Create annotated image with OCR visualization"""
+        try:
+            # Load visualizer
+            if not self.visualizer:
+                from ocr_invoice_reader.utils.visualizer import OCRVisualizer
+                self.visualizer = OCRVisualizer()
+
+            # Load original image
+            if self.original_image is None:
+                self.original_image = cv2.imread(self.current_file)
+
+            # Convert regions to dict format for visualizer
+            regions_for_viz = []
+            for region in result.get('regions', []):
+                region_dict = {
+                    'type': region.type,
+                    'bbox': region.bbox,
+                    'confidence': region.confidence,
+                    'text': region.text if hasattr(region, 'text') and region.text else ""
+                }
+
+                # Add OCR boxes if available
+                if hasattr(region, 'ocr_boxes') and region.ocr_boxes:
+                    region_dict['ocr_boxes'] = region.ocr_boxes
+
+                regions_for_viz.append(region_dict)
+
+            # Draw visualization
+            self.annotated_image = self.visualizer.draw_structure_result(
+                self.original_image.copy(),
+                regions_for_viz,
+                show_text=True,
+                show_boxes=True
+            )
+
+            print("[INFO] Visualization created successfully")
+
+            # Save visualization to temp file for display
+            temp_path = os.path.join(tempfile.gettempdir(), f"ocr_viz_{os.path.basename(self.current_file)}")
+            cv2.imwrite(temp_path, self.annotated_image)
+            print(f"[INFO] Visualization saved to: {temp_path}")
+
+        except Exception as e:
+            print(f"[WARN] Visualization failed: {e}")
+            import traceback
+            traceback.print_exc()
 
     def display_results(self, result):
         """Display results in text area"""
@@ -276,6 +328,13 @@ class SimpleOCRGUI:
 
         formatted_json = json.dumps(serializable_result, indent=2, ensure_ascii=False)
         self.results_text.insert(tk.END, formatted_json)
+
+        # Add visualization button
+        if self.annotated_image is not None:
+            self.results_text.insert(tk.END, "\n\n" + "="*80 + "\n")
+            self.results_text.insert(tk.END, "💡 Tip: Visualization image saved! View it in your system's image viewer.\n")
+            temp_path = os.path.join(tempfile.gettempdir(), f"ocr_viz_{os.path.basename(result.get('image_path', 'result.jpg'))}")
+            self.results_text.insert(tk.END, f"📁 Location: {temp_path}\n")
 
     def update_status(self, message):
         """Update status bar"""

@@ -354,11 +354,12 @@ class ModernOCRGUI:
         self.process_btn = tk.Button(
             upload_card,
             text="🚀 Process Document",
-            font=('Segoe UI', 12, 'bold'),
+            font=('Segoe UI', 13, 'bold'),
             bg=Theme.PRIMARY,
-            fg='white',
+            fg='#FFFFFF',  # Pure white for better contrast
             activebackground=Theme.PRIMARY_DARK,
-            activeforeground='white',
+            activeforeground='#FFFFFF',
+            disabledforeground='#94a3b8',  # Light gray when disabled
             relief='flat',
             bd=0,
             padx=30,
@@ -769,13 +770,23 @@ class ModernOCRGUI:
                 self.current_result = result
                 self.root.after(0, self._display_results, result)
             else:
-                # Fallback: Use CLI (slower)
-                self.root.after(0, lambda: messagebox.showwarning(
-                    "Not Optimized",
-                    "OCR engine not pre-loaded. This will be slower.\n\n"
-                    "For 5x faster processing, restart with pre-loaded engine."
-                ))
-                self._process_cli()
+                # Try to load analyzer now if not pre-loaded
+                self.root.after(0, lambda: self.status_var.set("⚠️ Loading OCR engine..."))
+                try:
+                    from ocr_invoice_reader.processors.enhanced_structure_analyzer import EnhancedStructureAnalyzer
+                    self.ocr_analyzer = EnhancedStructureAnalyzer(use_gpu=self.use_gpu_var.get(), lang=self.lang_var.get())
+
+                    # Now process with newly loaded analyzer
+                    result = self.ocr_analyzer.analyze(
+                        self.current_file,
+                        lang=self.lang_var.get(),
+                        visualize=self.visualize_var.get()
+                    )
+                    self.current_result = result
+                    self.root.after(0, self._display_results, result)
+                except Exception as load_error:
+                    error_msg = f"Failed to load OCR engine: {load_error}"
+                    self.root.after(0, lambda msg=error_msg: self._show_error(msg))
 
         except Exception as e:
             error_msg = str(e)
@@ -783,38 +794,7 @@ class ModernOCRGUI:
         finally:
             self.root.after(0, self._processing_complete)
 
-    def _process_cli(self):
-        """Fallback CLI processing"""
-        import subprocess
-
-        mode = self.mode_var.get()
-        lang = self.lang_var.get()
-        use_gpu = self.use_gpu_var.get()
-
-        output_dir = tempfile.mkdtemp(prefix="ocr_result_")
-
-        cmd = [
-            mode,
-            "--image", self.current_file,
-            "--lang", lang,
-            "--output-dir", output_dir
-        ]
-
-        if self.visualize_var.get():
-            cmd.append("--visualize")
-        if not use_gpu:
-            cmd.append("--use-cpu")
-
-        result = subprocess.run(cmd, capture_output=True, text=True)
-
-        if result.returncode == 0:
-            # Find result files
-            result_dir = Path(output_dir)
-            result_folders = [d for d in result_dir.iterdir() if d.is_dir()]
-            if result_folders:
-                self.root.after(0, self._display_cli_results, result_folders[0])
-        else:
-            raise Exception(result.stderr or "Processing failed")
+    # Removed _process_cli() - now always use pre-loaded analyzer for better performance
 
     def _display_results(self, result):
         """Display OCR results"""
@@ -889,23 +869,36 @@ class ModernOCRGUI:
 
 
 def load_ocr_engine(splash):
-    """Load OCR engine with splash screen"""
+    """Load OCR engine with splash screen - Always attempt to pre-load for 5x faster performance"""
+    import time
+
     try:
-        splash.update_status("Importing PaddleOCR v4...")
-        from ocr_invoice_reader.processors.enhanced_structure_analyzer import EnhancedStructureAnalyzer
+        splash.update_status("Loading OCR modules...")
+        time.sleep(0.3)
 
-        splash.update_status("Initializing OCR engine...")
-        analyzer = EnhancedStructureAnalyzer(use_gpu=False, lang='ch')
+        # Try to import the enhanced structure analyzer
+        try:
+            from ocr_invoice_reader.processors.enhanced_structure_analyzer import EnhancedStructureAnalyzer
+            splash.update_status("Initializing PaddleOCR v4 engine...")
+            time.sleep(0.3)
 
-        splash.update_status("✅ Ready!")
-        return analyzer
-    except ImportError as e:
-        splash.update_status("⚠️ OCR library not installed")
-        print(f"Import error: {e}")
-        return None
+            # Initialize with CPU by default (more compatible)
+            analyzer = EnhancedStructureAnalyzer(use_gpu=False, lang='ch')
+
+            splash.update_status("✅ OCR engine ready! (Pre-loaded for 5x speed)")
+            time.sleep(0.5)
+            return analyzer
+
+        except ImportError as ie:
+            splash.update_status("⚠️ OCR library not found, will load on-demand...")
+            print(f"Import error: {ie}")
+            time.sleep(1)
+            return None
+
     except Exception as e:
-        splash.update_status(f"⚠️ Error: {e}")
+        splash.update_status(f"⚠️ Engine load error, will retry on first use")
         print(f"Error loading OCR: {e}")
+        time.sleep(1)
         return None
 
 

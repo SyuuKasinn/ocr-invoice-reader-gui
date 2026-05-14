@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 OCR Invoice Reader GUI - Optimized Version
-优化版本:直接调用OCR库而不是subprocess,避免每次重新加载模型
+Direct OCR library calls instead of subprocess to avoid reloading model each time
 """
 
 import tkinter as tk
@@ -17,7 +17,7 @@ import tempfile
 
 
 class SplashScreen:
-    """启动画面"""
+    """Startup splash screen"""
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("OCR Invoice Reader")
@@ -50,7 +50,7 @@ class SplashScreen:
 
         self.status_label = tk.Label(
             self.root,
-            text="正在初始化...",
+            text="Initializing...",
             font=('Arial', 11),
             bg='#2c3e50',
             fg='#ecf0f1'
@@ -74,7 +74,7 @@ class SplashScreen:
 
         tip_label = tk.Label(
             self.root,
-            text="正在加载OCR引擎,首次启动需要下载模型...",
+            text="Loading OCR engine, first run will download models...",
             font=('Arial', 9),
             bg='#2c3e50',
             fg='#95a5a6',
@@ -98,7 +98,7 @@ class OCRInvoiceGUI:
         self.root.geometry("1200x800")
         self.root.minsize(800, 600)
 
-        # OCR引擎 - 预加载,避免每次处理都重新初始化
+        # Pre-loaded OCR engine - avoid reinitializing on each process
         self.ocr_reader = ocr_reader
 
         self.current_file = None
@@ -136,8 +136,8 @@ class OCRInvoiceGUI:
         self.setup_right_panel(right_panel)
 
         self.status_var = tk.StringVar(
-            value="✅ OCR引擎已加载,拖放文件即可快速处理" if self.ocr_reader
-            else "⚠️  OCR引擎未加载,将使用命令行模式(较慢)"
+            value="✅ OCR engine loaded, ready for fast processing" if self.ocr_reader
+            else "⚠️ OCR engine not loaded, will use command line mode (slower)"
         )
         status_bar = ttk.Label(
             main_frame,
@@ -342,7 +342,7 @@ class OCRInvoiceGUI:
         self.status_var.set(f"File loaded: {file_name}")
 
     def process_document(self):
-        """Process document - 使用预加载的OCR引擎"""
+        """Process document using pre-loaded OCR engine"""
         if not self.current_file:
             messagebox.showwarning("Warning", "Please load a file first!")
             return
@@ -355,14 +355,14 @@ class OCRInvoiceGUI:
         thread.start()
 
     def _process_thread_optimized(self):
-        """优化版处理 - 直接调用OCR库"""
+        """Optimized processing - direct OCR library calls"""
         import subprocess
         try:
             if self.ocr_reader:
-                # 方法1: 直接使用预加载的OCR引擎 (快!)
+                # Method 1: Use pre-loaded OCR engine (fast!)
                 self._process_with_library()
             else:
-                # 方法2: 降级到subprocess模式 (慢)
+                # Method 2: Fallback to subprocess mode (slow)
                 self._process_with_subprocess()
 
         except Exception as e:
@@ -371,15 +371,15 @@ class OCRInvoiceGUI:
             self.root.after(0, self._processing_complete)
 
     def _process_with_library(self):
-        """直接调用OCR库 - 不需要重新加载模型"""
+        """Direct OCR library call - no model reload needed"""
         try:
             import time
             start_time = time.time()
 
-            # 这里应该直接调用 self.ocr_reader 的方法
-            # 例如: result = self.ocr_reader.process(self.current_file, lang=self.lang_var.get())
+            # Direct call to self.ocr_reader method
+            # Example: result = self.ocr_reader.process(self.current_file, lang=self.lang_var.get())
 
-            # 目前先用subprocess模拟,你需要根据实际的ocr-invoice-reader API修改
+            # Currently using subprocess as fallback, modify based on actual ocr-invoice-reader API
             self._process_with_subprocess()
 
             elapsed = time.time() - start_time
@@ -389,7 +389,7 @@ class OCRInvoiceGUI:
             raise Exception(f"OCR processing failed: {e}")
 
     def _process_with_subprocess(self):
-        """降级方案:使用subprocess调用外部命令"""
+        """Fallback: subprocess call to external command"""
         import subprocess
 
         mode = self.mode_var.get()
@@ -508,38 +508,38 @@ class OCRInvoiceGUI:
 
 
 def load_ocr_engine(splash):
-    """在后台加载OCR引擎"""
+    """Load OCR engine in background"""
     try:
-        splash.update_status("正在导入OCR库...")
+        splash.update_status("Importing OCR library...")
         from ocr_invoice_reader import OCRInvoiceReader
 
-        splash.update_status("正在初始化OCR引擎...")
-        # 预加载模型 - 只加载一次!
+        splash.update_status("Initializing OCR engine...")
+        # Pre-load model - only once!
         ocr_reader = OCRInvoiceReader()
 
-        splash.update_status("✅ OCR引擎加载完成!")
+        splash.update_status("✅ OCR engine loaded successfully!")
         return ocr_reader
     except ImportError:
-        splash.update_status("⚠️  OCR库未安装,将使用命令行模式")
+        splash.update_status("⚠️ OCR library not installed, using command line mode")
         return None
     except Exception as e:
-        splash.update_status(f"⚠️  OCR引擎加载失败: {e}")
+        splash.update_status(f"⚠️ OCR engine loading failed: {e}")
         return None
 
 
 def main():
     """Main entry point with splash screen"""
-    # 显示启动画面
+    # Show splash screen
     splash = SplashScreen()
     splash.root.update()
 
-    # 后台加载OCR引擎
+    # Load OCR engine in background
     ocr_reader = load_ocr_engine(splash)
 
-    # 关闭启动画面
+    # Close splash screen
     splash.destroy()
 
-    # 启动主窗口
+    # Start main window
     try:
         root = TkinterDnD.Tk()
     except Exception:

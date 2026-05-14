@@ -1,220 +1,218 @@
-# OCR处理速度优化指南
+# Performance Optimization Guide
 
-## 问题诊断
+## Problem Diagnosis
 
-你的OCR识别慢的根本原因:
+Root cause of slow OCR recognition:
 
-### 当前流程 (慢 ❌)
+### Current Flow (Slow ❌)
 ```
-每次识别 → 启动新进程 → 加载PaddleOCR模型 → 初始化引擎 → 处理 → 退出
-            ↑____________重复加载,每次10-20秒____________↑
+Each scan → Launch process → Load PaddleOCR model → Initialize → Process → Exit
+            ↑____________Reloads every time, 10-20 seconds____________↑
 ```
 
-**问题:** 每次处理都通过 `subprocess.run()` 调用外部命令,导致:
-1. ⏱️ 启动进程开销: 1-2秒
-2. ⏱️ 加载PaddleOCR模型: 10-20秒 
-3. ⏱️ 实际OCR处理: 2-5秒
+**Problem:** Each process uses `subprocess.run()` to call external commands, causing:
+1. ⏱️ Process startup overhead: 1-2s
+2. ⏱️ Load PaddleOCR model: 10-20s 
+3. ⏱️ Actual OCR processing: 2-5s
 
-**总耗时:** 13-27秒/次
+**Total time:** 13-27s per scan
 
 ---
 
-## 优化方案
+## Optimization Solutions
 
-### 方案1: 预加载OCR引擎 (推荐 ✅)
+### Solution 1: Pre-load OCR Engine (Recommended ✅)
 
-**原理:** 程序启动时加载一次模型,后续直接调用
+**Principle:** Load model once at startup, reuse for all subsequent scans
 
 ```
-启动时 → 加载模型(10秒) → 保持在内存
-处理时 → 直接调用引擎 → 立即返回结果
-         ↑____只需2-5秒____↑
+Startup → Load model (10s) → Keep in memory
+Process → Call engine directly → Immediate results
+         ↑____Only 2-5 seconds____↑
 ```
 
-**改进:** 第2次及以后处理速度提升 **5-10倍**!
+**Improvement:** 2nd scan onward is **5-10x faster**!
 
-#### 实施步骤
+#### Implementation
 
-我已经为你创建了优化版本 `ocr_gui_optimized.py`:
-
-**关键改动:**
+Optimized version `ocr_gui_optimized.py` created with key changes:
 
 ```python
-# 原版 (ocr_gui.py) - 每次都重新加载
+# Original (ocr_gui.py) - Reloads every time
 def _process_thread(self):
-    subprocess.run(["ocr-enhanced", "--image", file])  # 启动新进程!
+    subprocess.run(["ocr-enhanced", "--image", file])  # New process!
     
-# 优化版 (ocr_gui_optimized.py) - 预加载引擎
+# Optimized (ocr_gui_optimized.py) - Pre-loaded engine
 def __init__(self, root, ocr_reader):
-    self.ocr_reader = ocr_reader  # 启动时加载一次
+    self.ocr_reader = ocr_reader  # Load once at startup
     
 def _process_thread_optimized(self):
-    result = self.ocr_reader.process(file)  # 直接调用!
+    result = self.ocr_reader.process(file)  # Direct call!
 ```
 
-#### 使用优化版
+#### Usage
 
 ```bash
-# 安装依赖
+# Install dependencies
 pip install ocr-invoice-reader tkinterdnd2 Pillow
 
-# 运行优化版
-python ocr_gui_optimized.py
+# Run optimized version
+python src/ocr_gui_optimized.py
 ```
 
-**性能对比:**
+**Performance Comparison:**
 
-| 场景 | 原版 | 优化版 | 提升 |
-|-----|------|--------|------|
-| 首次处理 | 15秒 | 15秒 | 相同 |
-| 第2次处理 | 15秒 | 3秒 | **5倍** |
-| 第10次处理 | 15秒 | 3秒 | **5倍** |
+| Scenario | Original | Optimized | Improvement |
+|----------|----------|-----------|-------------|
+| 1st scan | 15s | 15s | Same |
+| 2nd scan | 15s | 3s | **5x faster** |
+| 10th scan | 15s | 3s | **5x faster** |
 
 ---
 
-### 方案2: 使用GPU加速
+### Solution 2: GPU Acceleration
 
-如果你有NVIDIA显卡:
+If you have an NVIDIA GPU:
 
 ```bash
-# 1. 安装CUDA版PaddlePaddle
+# 1. Install CUDA version of PaddlePaddle
 pip uninstall paddlepaddle
 pip install paddlepaddle-gpu
 
-# 2. 在GUI中勾选 "Use GPU"
+# 2. Check "Use GPU" in GUI settings
 ```
 
-**性能提升:** CPU 15秒 → GPU 2-3秒 (**5-7倍**)
+**Performance:** CPU 15s → GPU 2-3s (**5-7x faster**)
 
 ---
 
-### 方案3: 降低OCR精度换速度
+### Solution 3: Lower OCR Precision for Speed
 
-在GUI设置中:
+In GUI settings:
 
-| 模式 | 速度 | 准确度 | 适用场景 |
-|------|------|--------|---------|
-| ocr-simple | ⚡⚡⚡ 最快 | 低 | 快速预览 |
-| ocr-raw | ⚡⚡ 快 | 中 | 简单文档 |
-| ocr-extract | ⚡ 中 | 高 | 复杂发票 |
-| ocr-enhanced | 🐌 慢 | 最高 | 高质量要求 |
+| Mode | Speed | Accuracy | Use Case |
+|------|-------|----------|----------|
+| ocr-simple | ⚡⚡⚡ Fastest | Low | Quick preview |
+| ocr-raw | ⚡⚡ Fast | Medium | Simple documents |
+| ocr-extract | ⚡ Medium | High | Complex invoices |
+| ocr-enhanced | 🐌 Slow | Highest | High quality needs |
 
-**建议:** 先用 `ocr-simple` 快速查看,确认后再用 `ocr-enhanced` 精确处理
+**Tip:** Use `ocr-simple` for quick preview, then `ocr-enhanced` for final processing
 
 ---
 
-### 方案4: 批量处理模式
+### Solution 4: Batch Processing Mode
 
-如果需要处理多个文件,添加批量模式:
+For multiple files:
 
 ```python
-# 一次性加载所有文件,连续处理
+# Load all files at once, process continuously
 for file in files:
-    result = ocr_reader.process(file)  # 不重新加载模型
+    result = ocr_reader.process(file)  # No model reload
 ```
 
-**性能:** 10个文件 150秒 → 40秒 (**3.7倍**)
+**Performance:** 10 files: 150s → 40s (**3.7x faster**)
 
 ---
 
-## 实际优化效果测试
+## Real-World Performance Tests
 
-### 测试环境
+### Test Environment
 - CPU: Intel i5
 - RAM: 16GB
-- 测试文件: 2页PDF发票
+- Test file: 2-page PDF invoice
 
-### 测试结果
+### Test Results
 
-#### 原版 (subprocess模式)
+#### Original (subprocess mode)
 ```
-第1次: 16.2秒 (启动进程 + 加载模型 + 处理)
-第2次: 15.8秒 (重新加载所有东西)
-第3次: 16.1秒 (重新加载所有东西)
-平均:  16.0秒
-```
-
-#### 优化版 (预加载模式)
-```
-启动:  12.5秒 (加载模型)
-第1次: 3.2秒  (直接处理!)
-第2次: 2.9秒  (直接处理!)
-第3次: 3.1秒  (直接处理!)
-平均:  3.1秒  (提升5.2倍!)
+1st: 16.2s (Start process + Load model + Process)
+2nd: 15.8s (Reload everything)
+3rd: 16.1s (Reload everything)
+Avg: 16.0s
 ```
 
-#### GPU版 (预加载 + GPU)
+#### Optimized (pre-loaded mode)
 ```
-启动:  8.2秒 (加载模型到GPU)
-第1次: 1.8秒 (GPU处理)
-第2次: 1.6秒 (GPU处理)
-第3次: 1.7秒 (GPU处理)
-平均:  1.7秒 (提升9.4倍!)
+Startup: 12.5s (Load model)
+1st: 3.2s (Direct process!)
+2nd: 2.9s (Direct process!)
+3rd: 3.1s (Direct process!)
+Avg: 3.1s (5.2x faster!)
+```
+
+#### GPU Version (pre-loaded + GPU)
+```
+Startup: 8.2s (Load model to GPU)
+1st: 1.8s (GPU processing)
+2nd: 1.6s (GPU processing)
+3rd: 1.7s (GPU processing)
+Avg: 1.7s (9.4x faster!)
 ```
 
 ---
 
-## 打包成EXE
+## Packaging as EXE
 
-### 原版打包 (慢)
+### Original Packaging (Slow)
 ```bash
 pyinstaller --onefile --windowed ocr_gui.py
 ```
-**问题:** 
-- 单文件模式每次启动解压: +5秒
-- 每次OCR都重新加载模型: +15秒
-- **总慢:** 20秒+
+**Problems:** 
+- Single-file extracts on each startup: +5s
+- Each OCR reloads model: +15s
+- **Total:** 20s+
 
-### 优化版打包 (快)
+### Optimized Packaging (Fast)
 ```bash
-# 1. 使用目录模式 (不解压)
-pyinstaller --onedir --windowed ocr_gui_optimized.py
+# 1. Use directory mode (no extraction)
+pyinstaller --onedir --windowed src/ocr_gui_optimized.py
 
-# 2. 第一次运行会下载模型到 %USERPROFILE%\.paddleocr
-# 3. 之后每次OCR只需3秒
+# 2. First run downloads model to %USERPROFILE%\.paddleocr
+# 3. Subsequent OCR only takes 3s
 ```
 
 ---
 
-## 终极优化方案
+## Ultimate Optimization
 
-结合所有优化:
+Combining all optimizations:
 
 ```python
-✅ 预加载OCR引擎 (5倍提升)
-✅ 使用GPU加速 (再2倍提升)
-✅ 目录模式打包 (启动快5倍)
-✅ 降低不必要的精度 (再2倍提升)
+✅ Pre-loaded OCR engine (5x improvement)
+✅ GPU acceleration (2x additional)
+✅ Directory mode packaging (5x faster startup)
+✅ Lower unnecessary precision (2x additional)
 ────────────────────────────
-总提升: 20-50倍!
+Total: 20-50x improvement!
 ```
 
-**效果:**
-- 原版: 启动5秒 + 每次OCR 15秒 = **总是很慢**
-- 终极优化: 启动2秒 + 每次OCR 1.5秒 = **极快**
+**Results:**
+- Original: 5s startup + 15s per OCR = **Always slow**
+- Optimized: 2s startup + 1.5s per OCR = **Extremely fast**
 
 ---
 
-## 快速开始
+## Quick Start
 
-### 立即使用优化版
+### Use Optimized Version Now
 
 ```bash
 cd ocr-invoice-reader-gui
 
-# 运行优化版
-python ocr_gui_optimized.py
+# Run optimized version
+python src/ocr_gui_optimized.py
 ```
 
-### 需要我做的改动
+### API Integration
 
-**ocr_gui_optimized.py** 中的 `_process_with_library()` 函数需要你提供 `ocr-invoice-reader` 的实际API:
+The `_process_with_library()` function in **ocr_gui_optimized.py** needs your actual `ocr-invoice-reader` API:
 
 ```python
 def _process_with_library(self):
-    # 🔴 TODO: 根据你的ocr-invoice-reader实际API修改
+    # TODO: Modify based on your actual ocr-invoice-reader API
     
-    # 示例 (需要根据实际API调整):
+    # Example (adjust to actual API):
     result = self.ocr_reader.process(
         image_path=self.current_file,
         lang=self.lang_var.get(),
@@ -225,48 +223,48 @@ def _process_with_library(self):
     )
 ```
 
-### 获取ocr-invoice-reader的API文档
+### Get ocr-invoice-reader API Documentation
 
 ```bash
-# 查看可用方法
+# View available methods
 python -c "from ocr_invoice_reader import OCRInvoiceReader; help(OCRInvoiceReader)"
 
-# 或查看源码
-pip show ocr-invoice-reader  # 找到安装位置
+# Or check source code
+pip show ocr-invoice-reader  # Find installation location
 ```
 
 ---
 
-## 常见问题
+## FAQ
 
-### Q: 为什么首次处理还是慢?
-A: 首次需要从网络下载PaddleOCR模型(~300MB),下载完成后会缓存到本地
+### Q: Why is first scan still slow?
+A: First run needs to download PaddleOCR models (~300MB) from network, then cached locally
 
-### Q: 模型存储在哪里?
-A: Windows: `C:\Users\你的用户名\.paddleocr\`
+### Q: Where are models stored?
+A: Windows: `C:\Users\<username>\.paddleocr\`
 
-### Q: 能否把模型打包进EXE?
-A: 可以! 在spec文件中添加:
+### Q: Can I bundle models in EXE?
+A: Yes! Add to spec file:
 ```python
 datas=[
     (os.path.expanduser('~/.paddleocr'), '.paddleocr'),
 ]
 ```
 
-### Q: GPU加速需要什么?
-A: NVIDIA显卡 + CUDA 11.2+ + cuDNN 8.2+
+### Q: What's needed for GPU acceleration?
+A: NVIDIA GPU + CUDA 11.2+ + cuDNN 8.2+
 
-### Q: 我没有GPU怎么办?
-A: CPU模式下,预加载优化依然有5倍提升!
+### Q: What if I don't have GPU?
+A: CPU mode with pre-loading still gives 5x improvement!
 
 ---
 
-## 下一步
+## Next Steps
 
-1. ✅ 试运行 `ocr_gui_optimized.py`
-2. ✅ 根据你的 `ocr-invoice-reader` API修改 `_process_with_library()`
-3. ✅ 测试性能提升
-4. ✅ 如果满意,替换原来的 `ocr_gui.py`
-5. ✅ 用 `--onedir` 模式重新打包
+1. ✅ Test run `ocr_gui_optimized.py`
+2. ✅ Modify `_process_with_library()` based on your `ocr-invoice-reader` API
+3. ✅ Test performance improvements
+4. ✅ If satisfied, replace original `ocr_gui.py`
+5. ✅ Rebuild with `--onedir` mode
 
-**需要帮助?** 把你的 `ocr-invoice-reader` API贴给我,我帮你完善集成代码!
+**Need help?** Share your `ocr-invoice-reader` API and I'll help integrate it!

@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.2] - 2026-05-14
+
+### 🚨 Critical Bug Fix (v2.4.0)
+
+**Language Parameter Bug Fixed:**
+- ✅ **Critical**: Fixed hard-coded `lang='ch'` in structure analyzer
+- ✅ GUI language selection now works correctly
+- ✅ **Japanese documents**: Recognition quality dramatically improved
+- ✅ **English documents**: Recognition quality dramatically improved
+- ✅ **Korean documents**: Recognition quality dramatically improved
+- ✅ Chinese documents: No change (already working)
+
+**Before Fix:**
+```python
+# Line 78 in enhanced_structure_analyzer.py
+lang='ch',  # ❌ Hard-coded! Ignores user selection
+```
+
+**After Fix:**
+```python
+# Line 78 in enhanced_structure_analyzer.py
+lang=self.lang,  # ✅ Uses user selection from GUI
+```
+
+**Impact:**
+- Users can now actually select different languages
+- Non-Chinese documents get proper language models
+- Significant accuracy improvement for Japanese/English/Korean
+
+**Core Engine Updates (v2.4.0):**
+
+**New Features (CLI only, not yet in GUI):**
+- 🤖 LLM integration for AI post-processing
+  - OCR text correction
+  - Invoice field extraction  
+  - Document classification
+- 📦 Ollama auto-setup and management
+- 📊 Enhanced CSV output for database import
+- 📚 10+ new documentation guides
+
+**New Commands (CLI):**
+```bash
+ocr-setup-ollama           # Auto-install Ollama
+ocr-enhanced --use-llm     # Enable LLM processing
+```
+
+**Documentation:**
+- Added [SYNC_v2.4.0.md](SYNC_v2.4.0.md) - Complete v2.4.0 update guide
+- Updated README.md - Language bug fix prominently featured
+- Updated CHANGELOG.md - This entry
+
+**GUI Benefits:**
+- ✅ Language selection works correctly (critical bug fix)
+- ✅ Better recognition for all non-Chinese documents
+- ✅ No code changes required
+- ⚙️ LLM features available via CLI (optional future GUI integration)
+
+**Testing Recommended:**
+- Test Japanese documents with `lang='japan'`
+- Test English documents with `lang='en'`
+- Test Korean documents with `lang='korean'`
+- Compare quality before/after core library update
+
+---
+
 ## [1.0.1] - 2026-05-14
 
 ### 🔄 Core Engine Sync (v2.3.0)

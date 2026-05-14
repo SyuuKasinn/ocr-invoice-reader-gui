@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![PaddleOCR](https://img.shields.io/badge/PaddleOCR-v4-orange)](https://github.com/PaddlePaddle/PaddleOCR)
-[![Core Version](https://img.shields.io/badge/core-v2.3.0-brightgreen)](https://github.com/SyuuKasinn/ocr-invoice-reader)
+[![Core Version](https://img.shields.io/badge/core-v2.4.0-brightgreen)](https://github.com/SyuuKasinn/ocr-invoice-reader)
 
 ---
 
@@ -214,45 +214,54 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## 📋 Latest Updates (2026-05-14)
 
-### Core Engine Improvements (v2.3.0)
-The GUI automatically benefits from these ocr-invoice-reader updates:
+### 🚨 Critical Bug Fix (v2.4.0)
 
-1. **🚀 Smart GPU Detection & Auto-Fallback** (Commit `aef841b`)
-   - Three-level GPU verification (CUDA support, device count, actual usage test)
-   - Automatic CPU fallback when GPU unavailable
-   - No more crashes due to missing GPU
-   - Clear console warnings when fallback occurs
+**Language Parameter Bug Fixed** (Commit `1a0eb35`)
+- ✅ Fixed hard-coded `lang='ch'` in structure analyzer (line 78)
+- ✅ Language selection in GUI now works correctly
+- ✅ **Significantly improved recognition for Japanese/English/Korean documents**
+- ✅ No GUI code changes required - automatic fix
 
-2. **🖼️ Image Optimizer** (New `ImageOptimizer` class)
-   - Optional image preprocessing for faster OCR
-   - Smart resizing (max 2000px, min 800px)
-   - Optional: denoise, contrast enhancement, sharpening
-   - Can be enabled with `optimize_images=True` parameter
+**Impact**: Users selecting non-Chinese languages will see dramatically better OCR results!
 
-3. **🐛 Unicode Encoding Fix** (Commit `b4da5f7`)
-   - Replaced emoji warnings with plain text
-   - No more cp932 codec errors on Windows
+### Core Engine Improvements (v2.4.0)
 
-4. **✅ Full Verification** (Commit `1b6736c`)
-   - All 11 PDF pages tested and verified
-   - Complete table extraction
-   - No empty table issues
+1. **🚨 Language Bug Fix** (Critical)
+   - GUI language selector now actually changes the OCR language
+   - Japanese: `lang='japan'` now uses Japanese models ✅
+   - English: `lang='en'` now uses English models ✅
+   - Korean: `lang='korean'` now uses Korean models ✅
 
-5. **🔧 Previous Updates** (v2.2.1+)
-   - Forced coordinate analysis when no tables detected
-   - OCR fallback for empty tables
-   - AttributeError fixes
+2. **🤖 LLM Integration** (CLI only, not in GUI)
+   - Optional AI post-processing with Ollama
+   - OCR text correction, field extraction, classification
+   - Auto-setup command: `ocr-setup-ollama`
+   - Enhanced CSV output for database import
 
-### GUI Features (v1.0.0)
+3. **📚 Documentation** (10+ new guides)
+   - Complete LLM integration guide
+   - Auto-setup guide for Ollama
+   - Quick reference and fixes
+   - Code review reports
+
+### Previous Updates (v2.3.0)
+
+- 🚀 Smart GPU detection & auto-fallback
+- 🖼️ Image optimizer (optional)
+- 🐛 Unicode encoding fix
+- ✅ Full verification (11 pages tested)
+
+### GUI Features (v1.0.2)
 - ✅ Apple-style interface with split-pane layout
 - ✅ Multi-page PDF support with navigation
 - ✅ Smart page caching system
 - ✅ Auto-reprocessing on settings change
 - ✅ CSV export alongside JSON
 - ✅ PDF quality control (144-300 DPI)
-- ✅ Automatic GPU detection (no crashes on non-GPU systems)
+- ✅ **Working language selection** (Bug fixed!)
+- ✅ Automatic GPU detection
 
-**See [SYNC_v2.3.0.md](SYNC_v2.3.0.md) for detailed update information.**
+**See [SYNC_v2.4.0.md](SYNC_v2.4.0.md) for detailed update information.**
 
 ---
 

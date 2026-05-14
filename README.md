@@ -1,353 +1,172 @@
 # OCR Invoice Reader GUI
 
-**Drag-and-Drop Desktop Application for Invoice OCR Processing**
+**简单可靠的图形界面** - 基于 [ocr-invoice-reader](https://github.com/SyuuKasinn/ocr-invoice-reader)
 
-A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/SyuuKasinn/ocr-invoice-reader) with **5x faster** OCR performance!
-
-[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Performance](https://img.shields.io/badge/performance-5x%20faster-brightgreen)](docs/guides/performance-optimization.md)
-
-## 🎨 v2.1 - Modern Edition + PaddleOCR v4!
-
-**Latest Release:** Complete UI redesign + 30-37% faster OCR with PaddleOCR v4!
-
-- 🎨 **Modern UI:** Professional card-based design, beautiful interface
-- ⚡ **Even Faster:** PaddleOCR v4 = 30-37% speed boost on top of 5x optimization
-- 💡 **Best Performance:** 10-11s first scan, 2-3s subsequent (6.5-7x faster overall!)
-- 🚀 **Better UX:** Animated splash, smooth transitions, intuitive layout
-- 📚 **Complete Redesign:** From the ground up for professional feel
-
-[See what's new in v2.1 →](docs/releases/v2.1_notes.md) | [v1.2 Notes →](docs/releases/v1.2_notes.md)
 
 ---
 
-## ✨ Features
+## ⚡ 快速开始
 
-### Core Features
-- 🎯 **Drag & Drop Interface** - Simply drag PDF or image files
-- 📊 **Real-time Visualization** - See OCR detection with color-coded regions
-- 🌍 **Multi-language Support** - Chinese, English, Japanese, Korean
-- 🔄 **Multiple OCR Modes** - Simple, Raw, Extract, Enhanced
-- 📋 **Rich Output Formats** - JSON, Text, Tables (HTML)
-
-### Performance Features (v1.2)
-- ⚡ **5x Faster OCR** - Pre-loaded model, no repeated initialization
-- 🚀 **Fast Startup** - Directory packaging, no extraction needed
-- 💫 **Splash Screen** - Visual loading progress
-- 🎮 **GPU Support** - Optional GPU acceleration
-- 📚 **Complete Documentation** - User guides and troubleshooting included
-
----
-
-## 📥 Download
-
-### Windows Executable (Recommended)
-
-**Latest Release:** v2.1.0 - Modern Edition + PaddleOCR v4 🎨⚡
-
-[📦 Download OCR-Invoice-Reader-Modern-v2.1.tar.gz](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/releases/latest) (~200MB)
-
-**Previous Release:**  
-[v1.2 - Optimized Edition](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/releases/tag/v1.2) (193MB)
-
-**What's included:**
-- ✅ Standalone executable (no Python required)
-- ✅ All dependencies bundled
-- ✅ Sample files
-- ✅ Complete documentation
-
-**System Requirements:**
-- Windows 7 or higher
-- 4GB RAM minimum (8GB+ recommended)
-- 1GB disk space
-- Internet connection (first run only, to download OCR model)
-
-### Python Source
+### 运行 GUI
 
 ```bash
-# Clone repository
-git clone https://github.com/SyuuKasinn/ocr-invoice-reader-gui.git
-cd ocr-invoice-reader-gui
+# 1. 安装依赖
+cd path/to/ocr-invoice-reader
+pip install -e .
 
-# Install dependencies
-pip install -r requirements.txt
+# 2. 运行 GUI
+cd path/to/ocr-invoice-reader-gui
+python src/ocr_gui_simple.py
 
-# Run optimized version
-python src/ocr_gui_optimized.py
+# 或双击
+run_gui.bat
+```
 
-# Or run original version
-python src/ocr_gui.py
+**就这么简单！** 🎉
+
+---
+
+## ⚠️ 关于 exe 打包
+
+**不提供 exe 文件** - PaddleOCR 的 Cython 依赖无法被 PyInstaller 正确打包。
+
+**解决方案**：从源代码运行（简单、快速、可靠）
+
+详见：[INSTALL.md](INSTALL.md)
+
+---
+
+## ✨ 特性
+
+- ✅ **简单可靠** - 200 行代码，直接调用 API
+- ✅ **快速启动** - 1 秒启动
+- ✅ **按需加载** - 首次处理时加载引擎
+- ✅ **多语言** - 中文、英文、日文、韩文
+- ✅ **GPU 支持** - 可选 GPU 加速
+
+---
+
+## 📊 性能
+
+| 操作 | 时间 |
+|------|------|
+| GUI 启动 | ~1 秒 ⚡ |
+| 首次 OCR（加载引擎） | ~10 秒 |
+| 后续 OCR | **2-3 秒** ⚡⚡⚡ |
+
+**保持 GUI 打开**，处理多个文件时第 2 个起只需 2-3 秒！
+
+---
+
+## 🖼️ 界面预览
+
+简洁的三步操作：
+1. **选择文件** - Browse 按钮
+2. **选择设置** - 语言、GPU
+3. **处理文档** - 一键处理
+
+结果实时显示在文本框中。
+
+---
+
+## 📖 详细文档
+
+- [安装指南](INSTALL.md) - 完整安装步骤
+- [简单版 README](README_SIMPLE.md) - 技术细节
+- [OCR 引擎](https://github.com/SyuuKasinn/ocr-invoice-reader) - 后端 API
+
+---
+
+## 🆚 两个 GUI 版本
+
+### `ocr_gui_simple.py` ✅ **推荐**
+
+- **简单**：200 行代码
+- **可靠**：直接 API 调用
+- **维护**：容易更新
+
+### `ocr_gui_modern.py` ❌ 已废弃
+
+- 复杂（1000+ 行）
+- 多个问题
+- 不推荐使用
+
+---
+
+## 🔧 系统要求
+
+- **操作系统**：Windows 7+, macOS, Linux
+- **Python**：3.8 或更高
+- **RAM**：4GB（推荐 8GB）
+- **网络**：首次运行需要（下载模型）
+
+---
+
+## 💡 使用技巧
+
+### 批量处理
+
+保持 GUI 打开，连续处理：
+```
+文件 1: 10秒（加载引擎）
+文件 2: 3秒 ⚡
+文件 3: 3秒 ⚡
+文件 4: 3秒 ⚡
+```
+
+### GPU 加速
+
+如果有 NVIDIA GPU：
+```bash
+# 安装 GPU 版本
+pip install paddlepaddle-gpu==3.0.0
+
+# GUI 中勾选 "Use GPU"
+# 速度提升 3-10 倍！
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🐛 故障排除
 
-### From Executable
-
-1. Extract `OCR-Invoice-Reader-Modern-v2.1.tar.gz`
-2. Double-click `OCR-Invoice-Reader-Modern.exe`
-3. Enjoy the modern splash screen (first run: ~10s to download PaddleOCR v4 models)
-4. Drag & drop a PDF or image file to the upload zone
-5. Adjust settings if needed, then click "Process Document"
-6. View results in the beautiful tabbed interface
-
-### From Source
+### 找不到模块？
 
 ```bash
-# Install dependencies
-pip install tkinterdnd2 Pillow paddleocr opencv-python
-
-# Run modern version (v2.1 - best!)
-python src/ocr_gui_modern.py
-
-# Or run optimized version (v1.2)
-python src/ocr_gui_optimized.py
-
-# Or run original version (v1.0)
-python src/ocr_gui.py
+cd path/to/ocr-invoice-reader
+pip install -e .
 ```
 
-**First Run Note:** PaddleOCR will download model files (~300MB) automatically. This happens once and is cached locally.
+### Python 找不到？
+
+重新安装 Python，勾选 "Add to PATH"
+
+### 更多问题？
+
+查看 [INSTALL.md](INSTALL.md) 或 [报告问题](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/issues)
 
 ---
 
-## 📊 Performance Comparison
+## 🙏 致谢
 
-| Scenario | Original | Optimized (v1.1) | Improvement |
-|----------|----------|------------------|-------------|
-| App Startup | 5 seconds | 2 seconds | **2.5x faster** ⚡ |
-| First OCR | 15 seconds | 15 seconds | Same |
-| 2nd OCR | 15 seconds | **3 seconds** | **5x faster** ⚡⚡⚡ |
-| 10 files batch | 150 seconds | **42 seconds** | **3.6x faster** ⚡⚡ |
-
-**Key Improvement:** Pre-loaded OCR engine - model loads once at startup, subsequent scans reuse the loaded model.
+- [ocr-invoice-reader](https://github.com/SyuuKasinn/ocr-invoice-reader) - 核心 OCR 引擎
+- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) - OCR 模型
 
 ---
 
-## 🎯 Usage Guide
+## 📄 许可证
 
-### Supported Formats
-- **PDF** (.pdf) - Multi-page supported
-- **Images** (.jpg, .jpeg, .png)
-
-### OCR Modes
-| Mode | Speed | Accuracy | Use Case |
-|------|-------|----------|----------|
-| `ocr-simple` | ⚡⚡⚡ Fastest | Medium | Quick preview |
-| `ocr-raw` | ⚡⚡ Fast | Good | Simple documents |
-| `ocr-extract` | ⚡ Medium | High | Invoices (recommended) |
-| `ocr-enhanced` | 🐌 Slow | Highest | High-quality needs |
-
-### Languages
-- 🇨🇳 Chinese (`ch`)
-- 🇺🇸 English (`en`)
-- 🇯🇵 Japanese (`japan`)
-- 🇰🇷 Korean (`korean`)
-
-### Output Tabs
-- 📊 **Visualization** - Annotated image with bounding boxes
-- 📋 **JSON Data** - Structured OCR results
-- 📝 **Extracted Text** - Plain text output
-- 🔢 **Tables** - HTML table data
+MIT License
 
 ---
 
-## 💡 Tips & Tricks
+## 🔗 相关链接
 
-### Speed Optimization
-
-**1. Process Multiple Files**
-```
-Don't close the app! Process files continuously:
-- File 1: 15s (model loads)
-- File 2: 3s  ⚡ (5x faster!)
-- File 3: 3s  ⚡
-```
-
-**2. Choose Right Mode**
-```
-Quick check → ocr-simple (1-2s)
-Daily use   → ocr-extract (3-5s)
-High quality → ocr-enhanced (5-8s)
-```
-
-**3. Enable GPU (Optional)**
-```
-☑ Check "Use GPU (if available)"
-Requirements: NVIDIA GPU + CUDA
-Result: 3s → 1.5s (2x faster!)
-```
+- **OCR 引擎**：https://github.com/SyuuKasinn/ocr-invoice-reader
+- **问题反馈**：https://github.com/SyuuKasinn/ocr-invoice-reader-gui/issues
+- **PaddleOCR**：https://github.com/PaddlePaddle/PaddleOCR
 
 ---
 
-## 📁 Project Structure
-
-```
-ocr-invoice-reader-gui/
-├── README.md                 # This file
-├── LICENSE                   # MIT License
-├── requirements.txt          # Python dependencies
-│
-├── src/                      # Source code
-│   ├── ocr_gui_modern.py    # Modern GUI (v2.1 - recommended)
-│   ├── ocr_gui_optimized.py # Optimized GUI (v1.2)
-│   ├── ocr_gui.py           # Original GUI (v1.0)
-│   └── common/              # Shared components
-│
-├── build/                    # Build configuration
-│   ├── specs/               # PyInstaller configs
-│   └── build.bat            # Build script
-│
-├── docs/                     # Documentation
-│   ├── guides/              # User guides
-│   ├── development/         # Dev docs
-│   └── releases/            # Release notes
-│
-├── scripts/                  # Utility scripts
-│   ├── run.bat              # Quick run script
-│   ├── demo/                # Demo scripts
-│   └── utils/               # Utility tools
-│
-├── demo/                     # Sample files
-├── tests/                    # Test files
-└── archive/                  # Old versions
-```
-
----
-
-## 🛠️ Development
-
-### Building from Source
-
-```bash
-# Install build dependencies
-pip install pyinstaller
-
-# Build optimized version (faster)
-cd build
-./build.bat
-
-# Or build original version
-pyinstaller specs/ocr_gui.spec
-
-# Or build simple version (smallest)
-pyinstaller specs/ocr_gui_simple.spec
-```
-
-See [Build Guide](docs/development/building.md) for details.
-
-### Running Tests
-
-```bash
-# Performance test
-python tests/test_optimized.py
-
-# Run all tests
-pytest tests/
-```
-
-### Project Documentation
-
-- [Installation Guide](docs/guides/installation.md)
-- [Quick Start](docs/guides/quick-start.txt)
-- [Performance Tips](docs/guides/performance-optimization.md)
-- [Building Guide](docs/development/building.md)
-- [Packaging Guide](docs/development/packaging.md)
-
----
-
-## 🔧 Troubleshooting
-
-### First Run is Slow
-**Normal!** First run downloads PaddleOCR models (~300MB). After download, models are cached at `%USERPROFILE%\.paddleocr\`.
-
-### Antivirus Warning
-**False positive.** PyInstaller executables may trigger warnings. Add to whitelist or build from source.
-
-### OCR Recognition Fails
-- Check "Use GPU" is unchecked if you don't have NVIDIA GPU
-- Ensure internet connection on first run (for model download)
-- Try different OCR mode
-
-### Still Slow After v1.1 Update
-- Make sure you're using `ocr_gui_optimized.py` or the v1.1 exe
-- First recognition is always slow (model loading)
-- 2nd recognition onward should be 5x faster
-
----
-
-## 📋 Changelog
-
-### v2.1.0 (2026-05-14) - Modern Edition + PaddleOCR v4
-- 🎨 **Complete UI redesign** - Modern, professional card-based interface
-- ⚡ **PaddleOCR v4** - 30-37% faster OCR recognition
-- 💫 **Enhanced UX** - Animated splash, smooth transitions
-- 🚀 **6.5-7x faster** - Combined optimization + PaddleOCR v4
-- 📚 **Better architecture** - Clean code, theme system
-
-### v1.2 (2024-05-13) - Performance Optimized
-- ⚡ **5x faster OCR** - Pre-loaded engine, no repeated model loading
-- 🚀 **2.5x faster startup** - Directory packaging instead of onefile
-- 💫 **Splash screen** - Visual loading progress
-- 📝 **Complete documentation** - Guides, tips, troubleshooting
-
-### v1.0 (2024-05-01) - Initial Release
-- 🎯 Drag & drop interface
-- 📊 Multi-tab result display
-- 🌍 Multi-language support
-- 🔄 Multiple OCR modes
-
-[Full Changelog →](docs/releases/)
-
----
-
-## 🙏 Acknowledgments
-
-This project is built upon:
-- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) - Powerful multilingual OCR toolkit
-- [ocr-invoice-reader](https://github.com/SyuuKasinn/ocr-invoice-reader) - Base OCR engine
-- [tkinterdnd2](https://github.com/pmgagne/tkinterdnd2) - Drag & drop support
-- [Pillow](https://python-pillow.org/) - Image processing
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🔗 Links
-
-- **GitHub**: https://github.com/SyuuKasinn/ocr-invoice-reader-gui
-- **Issues**: https://github.com/SyuuKasinn/ocr-invoice-reader-gui/issues
-- **Releases**: https://github.com/SyuuKasinn/ocr-invoice-reader-gui/releases
-- **Base OCR Engine**: https://github.com/SyuuKasinn/ocr-invoice-reader
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 💬 Support
-
-Need help? 
-- 📖 Check the [Documentation](docs/)
-- 🐛 [Report a Bug](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/issues)
-- 💡 [Request a Feature](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/issues)
-- 💬 [Discussions](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/discussions)
-
----
-
-**⚡ Enjoy 5x faster OCR!**
+**从源代码运行，简单可靠！** 🚀

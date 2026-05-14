@@ -101,7 +101,16 @@ class AppleStyleGUI:
         tk.Checkbutton(settings_row, text="Use GPU",
                       variable=self.gpu_var,
                       font=('Arial', 11),
-                      bg=self.colors['bg']).pack(side=tk.LEFT)
+                      bg=self.colors['bg']).pack(side=tk.LEFT, padx=(0,15))
+
+        # Process all pages option (for PDFs)
+        self.process_all_pages_var = tk.BooleanVar(value=False)
+        self.process_all_checkbox = tk.Checkbutton(settings_row, text="Process All Pages (PDF)",
+                                                   variable=self.process_all_pages_var,
+                                                   font=('Arial', 11),
+                                                   bg=self.colors['bg'],
+                                                   state='disabled')
+        self.process_all_checkbox.pack(side=tk.LEFT)
 
         # Add callbacks to reprocess on settings change
         self.lang_var.trace_add('write', self.on_settings_changed)
@@ -366,6 +375,13 @@ class AppleStyleGUI:
         self.total_pages = 0
         self.page_cache = {}  # Clear cache when loading new file
 
+        # Enable/disable "Process All Pages" checkbox
+        if path.lower().endswith('.pdf'):
+            self.process_all_checkbox.config(state='normal')
+        else:
+            self.process_all_checkbox.config(state='disabled')
+            self.process_all_pages_var.set(False)
+
         # Load preview
         try:
             if path.lower().endswith('.pdf'):
@@ -621,43 +637,16 @@ class AppleStyleGUI:
                     lang=self.lang_var.get()
                 )
 
-            self.root.after(0, lambda: self.update_status("🔍 Analyzing document structure..."))
+            # Check if we should process all pages
+            is_pdf = self.current_file.lower().endswith('.pdf')
+            process_all = is_pdf and self.process_all_pages_var.get()
 
-            # For PDF, save current page as temp image and analyze that
-            analyze_path = self.current_file
-            temp_image_path = None
-
-            if self.current_file.lower().endswith('.pdf'):
-                if self.original_image is not None:
-                    # Save current page as temp image
-                    import tempfile
-                    temp_image_path = os.path.join(tempfile.gettempdir(),
-                                                   f"ocr_pdf_page_{self.current_page}.jpg")
-                    cv2.imwrite(temp_image_path, self.original_image)
-                    analyze_path = temp_image_path
-                    print(f"[INFO] Processing PDF page {self.current_page + 1}, saved as temp image: {temp_image_path}")
-
-            result = self.analyzer.analyze(analyze_path)
-
-            # Clean up temp file
-            if temp_image_path and os.path.exists(temp_image_path):
-                try:
-                    os.remove(temp_image_path)
-                except:
-                    pass
-
-            # Set current_result immediately after analysis
-            self.current_result = result
-
-            self.root.after(0, lambda: self.update_status("🎨 Creating visualization..."))
-            self.create_visualization(result)
-
-            self.root.after(0, lambda: self.display_results(result))
-            self.root.after(0, lambda: self.update_status("✓ Processing complete"))
-
-            # Save to cache if it's a PDF
-            if self.current_file.lower().endswith('.pdf'):
-                self.save_current_page_state()
+            if process_all and self.total_pages > 1:
+                # Process all pages
+                self._process_all_pdf_pages()
+            else:
+                # Process current page only
+                self._process_single_page()
 
         except Exception as e:
             print(f"[ERROR] {e}")
@@ -668,6 +657,246 @@ class AppleStyleGUI:
         finally:
             self.processing = False
             self.root.after(0, self._finish_processing)
+
+    def _process_single_page(self):
+        """Process single page (current page for PDF, or entire image)"""
+        self.root.after(0, lambda: self.update_status("🔍 Analyzing document structure..."))
+
+        # For PDF, save current page as temp image and analyze that
+        analyze_path = self.current_file
+        temp_image_path = None
+
+        if self.current_file.lower().endswith('.pdf'):
+            if self.original_image is not None:
+                # Save current page as temp image
+                import tempfile
+                temp_image_path = os.path.join(tempfile.gettempdir(),
+                                               f"ocr_pdf_page_{self.current_page}.jpg")
+                cv2.imwrite(temp_image_path, self.original_image)
+                analyze_path = temp_image_path
+                print(f"[INFO] Processing PDF page {self.current_page + 1}, saved as temp image: {temp_image_path}")
+
+        result = self.analyzer.analyze(analyze_path)
+
+        # Clean up temp file
+        if temp_image_path and os.path.exists(temp_image_path):
+            try:
+                os.remove(temp_image_path)
+            except:
+                pass
+
+        # Set current_result immediately after analysis
+        self.current_result = result
+
+        self.root.after(0, lambda: self.update_status("🎨 Creating visualization..."))
+        self.create_visualization(result)
+
+        self.root.after(0, lambda: self.display_results(result))
+        self.root.after(0, lambda: self.update_status("✓ Processing complete"))
+
+        # Save to cache if it's a PDF
+        if self.current_file.lower().endswith('.pdf'):
+            self.save_current_page_state()
+
+    def _process_all_pdf_pages(self):
+        """Process all pages of a PDF document"""
+        print(f"[INFO] Processing all {self.total_pages} pages of PDF")
+
+        import tempfile
+        import fitz
+
+        all_results = []
+
+        for page_num in range(self.total_pages):
+            self.root.after(0, lambda p=page_num: self.update_status(
+                f"🔍 Processing page {p + 1}/{self.total_pages}..."))
+
+            print(f"[INFO] Processing page {page_num + 1}/{self.total_pages}")
+
+            # Check if page is already in cache
+            if page_num in self.page_cache:
+                print(f"[INFO] Page {page_num + 1} already processed, using cached result")
+                cached = self.page_cache[page_num]
+                all_results.append({
+                    'page': page_num + 1,
+                    'result': cached['result']
+                })
+                continue
+
+            # Render page from PDF
+            try:
+                pdf = fitz.open(self.current_file)
+                page = pdf[page_num]
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                img_data = pix.tobytes("ppm")
+
+                import io
+                from PIL import Image
+                import numpy as np
+                pil_img = Image.open(io.BytesIO(img_data))
+                page_image = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+                pdf.close()
+
+                # Save as temp image
+                temp_image_path = os.path.join(tempfile.gettempdir(),
+                                             f"ocr_pdf_page_{page_num}.jpg")
+                cv2.imwrite(temp_image_path, page_image)
+
+                # Analyze
+                result = self.analyzer.analyze(temp_image_path)
+
+                # Clean up
+                if os.path.exists(temp_image_path):
+                    try:
+                        os.remove(temp_image_path)
+                    except:
+                        pass
+
+                # Create visualization for this page
+                regions_viz = []
+                for r in result.get('regions', []):
+                    rd = {'type': r.type, 'bbox': r.bbox, 'confidence': r.confidence,
+                          'text': r.text if hasattr(r, 'text') and r.text else ""}
+                    if hasattr(r, 'ocr_boxes') and r.ocr_boxes:
+                        rd['ocr_boxes'] = r.ocr_boxes
+                    regions_viz.append(rd)
+
+                try:
+                    if not self.visualizer:
+                        from ocr_invoice_reader.utils.visualizer import OCRVisualizer
+                        self.visualizer = OCRVisualizer()
+
+                    annotated = self.visualizer.visualize_regions(
+                        page_image.copy(), regions_viz,
+                        show_text=True, show_boxes=True
+                    )
+                except:
+                    annotated = page_image
+
+                # Cache this page
+                self.page_cache[page_num] = {
+                    'result': result,
+                    'annotated_image': annotated.copy(),
+                    'original_image': page_image.copy()
+                }
+
+                all_results.append({
+                    'page': page_num + 1,
+                    'result': result
+                })
+
+                print(f"[INFO] Page {page_num + 1} processed successfully")
+
+            except Exception as e:
+                print(f"[ERROR] Failed to process page {page_num + 1}: {e}")
+                all_results.append({
+                    'page': page_num + 1,
+                    'error': str(e)
+                })
+
+        # Display combined results
+        self.root.after(0, lambda: self.update_status("📊 Compiling results..."))
+        self.root.after(0, lambda: self._display_all_pages_results(all_results))
+        self.root.after(0, lambda: self.update_status(f"✓ Processed {self.total_pages} pages"))
+
+        # Load first page to display
+        if 0 in self.page_cache:
+            self.root.after(0, lambda: self._load_cached_page(0))
+
+    def _load_cached_page(self, page_num):
+        """Load a cached page and display it"""
+        if page_num in self.page_cache:
+            cached = self.page_cache[page_num]
+            self.current_page = page_num
+            self.original_image = cached['original_image']
+            self.annotated_image = cached['annotated_image']
+            self.current_result = cached['result']
+
+            display_img = self.annotated_image if self.annotated_image is not None else self.original_image
+            if display_img is not None:
+                self.display_image(display_img)
+
+            self.update_page_controls()
+
+    def _display_all_pages_results(self, all_results):
+        """Display combined results from all pages"""
+        for text in self.text_widgets.values():
+            text.config(state='normal')
+            text.delete(1.0, tk.END)
+
+        # Summary tab
+        summary_text = self.text_widgets['summary']
+        summary_text.insert(tk.END, f"PDF Document: {self.total_pages} pages\n")
+        summary_text.insert(tk.END, "=" * 80 + "\n\n")
+
+        total_regions = 0
+        for page_data in all_results:
+            if 'error' in page_data:
+                summary_text.insert(tk.END, f"Page {page_data['page']}: ERROR - {page_data['error']}\n")
+            else:
+                result = page_data['result']
+                num_regions = len(result.get('regions', []))
+                total_regions += num_regions
+                summary_text.insert(tk.END, f"Page {page_data['page']}: {num_regions} regions detected\n")
+
+        summary_text.insert(tk.END, f"\nTotal regions across all pages: {total_regions}\n")
+
+        # Regions tab - show all regions from all pages
+        regions_text = self.text_widgets['regions']
+        for page_data in all_results:
+            if 'error' not in page_data:
+                result = page_data['result']
+                regions_text.insert(tk.END, f"\n{'=' * 80}\n")
+                regions_text.insert(tk.END, f"PAGE {page_data['page']}\n")
+                regions_text.insert(tk.END, f"{'=' * 80}\n\n")
+
+                for i, region in enumerate(result.get('regions', []), 1):
+                    regions_text.insert(tk.END, f"Region {i}:\n")
+                    regions_text.insert(tk.END, f"  Type: {region.type}\n")
+                    regions_text.insert(tk.END, f"  BBox: {region.bbox}\n")
+                    regions_text.insert(tk.END, f"  Confidence: {region.confidence:.2%}\n")
+                    text_content = region.text if hasattr(region, 'text') and region.text else ""
+                    if text_content:
+                        preview = text_content[:200]
+                        regions_text.insert(tk.END, f"  Text: {preview}\n")
+                        if len(text_content) > 200:
+                            regions_text.insert(tk.END, "  ...\n")
+                    regions_text.insert(tk.END, "\n")
+
+        # JSON tab - combined JSON
+        json_text = self.text_widgets['json']
+        combined_data = {
+            'document': os.path.basename(self.current_file),
+            'total_pages': self.total_pages,
+            'pages': []
+        }
+
+        for page_data in all_results:
+            if 'error' in page_data:
+                combined_data['pages'].append({
+                    'page': page_data['page'],
+                    'error': page_data['error']
+                })
+            else:
+                result = page_data['result']
+                combined_data['pages'].append({
+                    'page': page_data['page'],
+                    'regions': [
+                        {
+                            'type': r.type,
+                            'bbox': r.bbox,
+                            'confidence': r.confidence,
+                            'text': r.text if hasattr(r, 'text') and r.text else ""
+                        }
+                        for r in result.get('regions', [])
+                    ]
+                })
+
+        import json
+        json_text.insert(tk.END, json.dumps(combined_data, indent=2, ensure_ascii=False))
+
+        for text in self.text_widgets.values():
+            text.config(state='disabled')
 
     def _finish_processing(self):
         """Clean up after processing"""

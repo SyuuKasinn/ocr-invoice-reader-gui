@@ -1,0 +1,16 @@
+# OCR Invoice Reader GUI - Dependencies
+#
+# Main dependency: ocr-invoice-reader
+# Install it first:
+#   git clone https://github.com/SyuuKasinn/ocr-invoice-reader.git
+#   cd ocr-invoice-reader
+#   pip install -e .
+
+# Core dependencies (auto-installed with ocr-invoice-reader)
+paddleocr>=2.8.1
+paddlepaddle>=3.0.0
+opencv-python>=4.5.0
+pymupdf>=1.23.0
+pydantic>=2.0.0
+numpy>=1.21.0
+pillow>=9.0.0

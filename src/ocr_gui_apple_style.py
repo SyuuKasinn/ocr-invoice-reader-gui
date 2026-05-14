@@ -530,8 +530,9 @@ class AppleStyleGUI:
         """Auto-reprocess when settings change"""
         # Only reprocess if we have already processed this file
         if self.current_file and self.current_result and not self.processing:
-            # Reset analyzer to apply new settings
+            # Reset analyzer and visualizer to apply new settings
             self.analyzer = None
+            self.visualizer = None
             # Auto-reprocess
             self.process_document()
 
@@ -571,6 +572,9 @@ class AppleStyleGUI:
 
             self.root.after(0, lambda: self.update_status("Analyzing..."))
             result = self.analyzer.analyze(self.current_file)
+
+            # Set current_result immediately after analysis
+            self.current_result = result
 
             self.root.after(0, lambda: self.update_status("Creating visualization..."))
             self.create_visualization(result)
@@ -618,18 +622,25 @@ class AppleStyleGUI:
             # Fallback: try without text if Unicode issues
             try:
                 print(f"[WARN] Unicode error in visualization, retrying without text: {e}")
-                self.annotated_image = self.visualizer.visualize_regions(
-                    self.original_image.copy(), regions_viz,
-                    show_text=False, show_boxes=True
-                )
-                self.root.after(0, lambda: self.display_image(self.annotated_image))
+                if self.visualizer:
+                    self.annotated_image = self.visualizer.visualize_regions(
+                        self.original_image.copy(), regions_viz,
+                        show_text=False, show_boxes=True
+                    )
+                    self.root.after(0, lambda: self.display_image(self.annotated_image))
+                else:
+                    print(f"[ERROR] Visualizer not initialized")
+                    self.root.after(0, lambda: self.display_image(self.original_image))
             except Exception as e2:
                 print(f"[ERROR] Visualization failed completely: {e2}")
                 # Show original image instead
                 self.root.after(0, lambda: self.display_image(self.original_image))
         except Exception as e:
             print(f"[WARN] Visualization failed: {e}")
+            import traceback
+            traceback.print_exc()
             # Show original image as fallback
+            self.annotated_image = self.original_image
             self.root.after(0, lambda: self.display_image(self.original_image))
 
     def display_results(self, result):

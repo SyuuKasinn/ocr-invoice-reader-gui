@@ -8,15 +8,16 @@ A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Performance](https://img.shields.io/badge/performance-5x%20faster-brightgreen)](docs/guides/performance-optimization.md)
 
-## ⚡ v1.1 - Performance Optimized!
+## ⚡ v1.2 - Optimized Edition!
 
-**Major Update:** OCR recognition now **5x faster** after first run!
+**Latest Release:** OCR recognition now **5x faster** from 2nd scan onward!
 
 - 🚀 **Startup:** 5s → 2s (2.5x faster)
 - ⚡ **OCR Recognition:** 15s → 3s (5x faster, 2nd time onward)
 - 💡 **Pre-loaded Engine:** Load model once, reuse forever
+- 📚 **Complete Docs:** README.txt, VERSION.txt included
 
-[See what's new in v1.1 →](docs/releases/v1.1.md)
+[See what's new in v1.2 →](docs/releases/v1.2_notes.md) | [Test Report →](docs/releases/v1.2-test-report.md)
 
 ---
 
@@ -29,11 +30,12 @@ A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/
 - 🔄 **Multiple OCR Modes** - Simple, Raw, Extract, Enhanced
 - 📋 **Rich Output Formats** - JSON, Text, Tables (HTML)
 
-### Performance Features (v1.1)
+### Performance Features (v1.2)
 - ⚡ **5x Faster OCR** - Pre-loaded model, no repeated initialization
 - 🚀 **Fast Startup** - Directory packaging, no extraction needed
 - 💫 **Splash Screen** - Visual loading progress
 - 🎮 **GPU Support** - Optional GPU acceleration
+- 📚 **Complete Documentation** - User guides and troubleshooting included
 
 ---
 
@@ -41,9 +43,9 @@ A user-friendly graphical interface for [ocr-invoice-reader](https://github.com/
 
 ### Windows Executable (Recommended)
 
-**Latest Release:** v1.1 - Performance Optimized
+**Latest Release:** v1.2 - Optimized Edition ⚡
 
-[📦 Download OCR-Invoice-Reader-v1.1.tar.gz](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/releases/latest) (193MB)
+[📦 Download OCR-Invoice-Reader-Optimized-v1.2.tar.gz](https://github.com/SyuuKasinn/ocr-invoice-reader-gui/releases/latest) (193MB)
 
 **What's included:**
 - ✅ Standalone executable (no Python required)

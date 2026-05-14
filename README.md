@@ -43,6 +43,7 @@ python src/ocr_gui_simple.py
 
 ## ✨ Features
 
+- ✅ **Drag & Drop** - Simply drag files onto the window
 - ✅ **Simple & Reliable** - Clean, maintainable code
 - ✅ **Fast Startup** - Launches in ~1 second
 - ✅ **On-Demand Loading** - OCR engine loads on first use
@@ -68,7 +69,10 @@ python src/ocr_gui_simple.py
 ## 📖 Usage
 
 ### Step 1: Select File
-Click **"Browse..."** and select a PDF or image file.
+**Option A:** Drag and drop a file onto the drop zone  
+**Option B:** Click the drop zone or "Browse..." button to select a file
+
+Supported formats: PDF, JPG, JPEG, PNG
 
 ### Step 2: Configure Settings
 - **Language**: Choose ch/en/japan/korean

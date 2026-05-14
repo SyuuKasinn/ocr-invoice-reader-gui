@@ -1,10 +1,11 @@
 # OCR Invoice Reader GUI
 
-> Simple, reliable graphical interface for [ocr-invoice-reader](https://github.com/SyuuKasinn/ocr-invoice-reader)
+> Professional Apple-style desktop interface for [ocr-invoice-reader](https://github.com/SyuuKasinn/ocr-invoice-reader)
 
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![PaddleOCR](https://img.shields.io/badge/PaddleOCR-v4-orange)](https://github.com/PaddlePaddle/PaddleOCR)
+[![Core Version](https://img.shields.io/badge/core-v2.2.1+-brightgreen)](https://github.com/SyuuKasinn/ocr-invoice-reader)
 
 ---
 
@@ -27,14 +28,8 @@
 
 ### Run the GUI
 
-**Option 1: Double-click**
-```
-run_gui.bat  (Windows)
-```
-
-**Option 2: Command line**
 ```bash
-python src/ocr_gui_simple.py
+python src/ocr_gui_apple_style.py
 ```
 
 **That's it!** 🎉
@@ -43,14 +38,38 @@ python src/ocr_gui_simple.py
 
 ## ✨ Features
 
-- ✅ **Drag & Drop** - Simply drag files onto the window
-- ✅ **Simple & Reliable** - Clean, maintainable code
-- ✅ **Fast Startup** - Launches in ~1 second
-- ✅ **On-Demand Loading** - OCR engine loads on first use
-- ✅ **Image Visualization** - Annotated images with detection boxes
+### UI & UX
+- ✅ **Apple-Style Design** - Clean, minimalist interface inspired by macOS
+- ✅ **Drag & Drop** - Simply drag files onto the preview canvas
+- ✅ **Split View** - 60% preview + 40% results panel
+- ✅ **Real-time Visualization** - Live annotated images with detection boxes
+- ✅ **Zoom Controls** - Zoom in/out and reset for detailed inspection
+
+### Document Processing
+- ✅ **Multi-Page PDF** - Page navigation with previous/next controls
+- ✅ **Batch Processing** - Process all PDF pages at once
+- ✅ **Smart Caching** - Page results are cached for instant switching
+- ✅ **Auto-Reprocess** - Automatically updates when settings change
+- ✅ **PDF Quality Control** - 144/216/288/300 DPI rendering options
+
+### OCR Features
+- ✅ **Enhanced Table Detection** - Automatic fallback for better table recognition
+- ✅ **OCR Fallback** - Handles empty tables with direct OCR extraction
 - ✅ **Multi-Language** - Chinese, English, Japanese, Korean
 - ✅ **GPU Support** - Optional GPU acceleration
+- ✅ **Text Processing** - Automatic word splitting and text enhancement
+
+### Export & Results
+- ✅ **Multiple Formats** - JSON, CSV, and Text export
+- ✅ **Four View Tabs** - Summary, Regions, JSON, CSV
+- ✅ **Structured Data** - Region type, bbox, confidence, text content
+- ✅ **Batch CSV Export** - Combined CSV for all PDF pages
+
+### System
+- ✅ **Fast Startup** - Launches instantly
+- ✅ **On-Demand Loading** - OCR engine loads on first use
 - ✅ **Cross-Platform** - Windows, macOS, Linux
+- ✅ **Latest Core** - Automatically benefits from ocr-invoice-reader v2.2.1+ improvements
 
 ---
 
@@ -101,11 +120,13 @@ The visualization file location is shown in the results.
 ```
 ocr-invoice-reader-gui/
 ├── src/
-│   └── ocr_gui_simple.py      # Main GUI application (recommended)
+│   └── ocr_gui_apple_style.py # Main GUI application (Apple-style)
 ├── docs/
 │   ├── INSTALL.md             # Detailed installation guide
 │   └── TROUBLESHOOTING.md     # Common issues and solutions
-├── run_gui.bat                # Quick launch script (Windows)
+├── SYNC_v2.2.md               # Sync notes for v2.2.0
+├── SYNC_v2.2.1.md             # Latest sync notes for v2.2.1+
+├── PDF_DPI_FIX.md             # PDF quality/DPI fix documentation
 ├── requirements.txt           # Python dependencies
 └── README.md                  # This file
 ```
@@ -191,16 +212,34 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ---
 
-## 🆚 Version Comparison
+## 📋 Latest Updates (2026-05-14)
 
-| File | Status | Lines | Description |
-|------|--------|-------|-------------|
-| `ocr_gui_simple.py` | ✅ **Recommended** | 200 | Clean, simple, reliable |
-| `ocr_gui_modern.py` | ❌ Deprecated | 1000+ | Complex, unmaintained |
-| `ocr_gui_optimized.py` | ❌ Deprecated | 600+ | Obsolete |
-| `ocr_gui.py` | ❌ Deprecated | 550+ | Original, outdated |
+### Core Engine Improvements (v2.2.1+)
+The GUI automatically benefits from these ocr-invoice-reader updates:
 
-**Use `ocr_gui_simple.py`** - it's the only maintained version.
+1. **🔧 Forced Coordinate Analysis** (Commit `8233af2`)
+   - Automatically uses coordinate-based analysis when no tables detected
+   - Fixes missing table content on invoice pages
+   - Better handling of complex layouts
+
+2. **🔧 OCR Fallback for Empty Tables** (Commit `bdf98c6`)
+   - Detects empty table regions from PP-Structure
+   - Automatically runs OCR directly on table region
+   - Extracts content even when HTML parsing fails
+
+3. **🐛 AttributeError Fix** (Commit `a9973b5`)
+   - Fixed `.type` vs `.region_type` attribute access
+   - More stable region processing
+
+### GUI Features (v1.0.0)
+- ✅ Apple-style interface with split-pane layout
+- ✅ Multi-page PDF support with navigation
+- ✅ Smart page caching system
+- ✅ Auto-reprocessing on settings change
+- ✅ CSV export alongside JSON
+- ✅ PDF quality control (144-300 DPI)
+
+**See [SYNC_v2.2.1.md](SYNC_v2.2.1.md) for detailed update information.**
 
 ---
 

@@ -298,7 +298,7 @@ class AppleStyleGUI:
         self.current_tab = 'summary'
         self.tab_buttons = {}
 
-        for tab_id, name in [('summary','Summary'),('regions','Regions'),('json','JSON')]:
+        for tab_id, name in [('summary','Summary'),('regions','Regions'),('json','JSON'),('csv','CSV')]:
             btn = tk.Button(tab_frame, text=name,
                           command=lambda t=tab_id: self.switch_tab(t),
                           font=('Arial', 12),
@@ -318,7 +318,7 @@ class AppleStyleGUI:
         self.text_widgets = {}
         self.text_frames = {}
 
-        for tab_id in ['summary','regions','json']:
+        for tab_id in ['summary','regions','json','csv']:
             frame = tk.Frame(text_container, bg=self.colors['bg'])
             text = tk.Text(frame, font=('Courier', 9), wrap=tk.WORD,
                           bg=self.colors['bg'], relief='flat',
@@ -376,6 +376,10 @@ class AppleStyleGUI:
 
     def load_file(self, path):
         """Load file"""
+        if not os.path.exists(path):
+            messagebox.showerror("Error", f"File not found:\n{path}")
+            return
+
         self.current_file = path
         self.file_label.config(text=f"📄 {os.path.basename(path)}",
                               fg=self.colors['text_primary'])
@@ -426,6 +430,23 @@ class AppleStyleGUI:
         else:
             return 2  # Default 2x
 
+    def _pdf_page_to_image(self, pdf_path, page_num):
+        """Convert PDF page to image (reusable helper)"""
+        import fitz
+        import io
+        from PIL import Image
+        import numpy as np
+
+        pdf = fitz.open(pdf_path)
+        page = pdf[page_num]
+        scale = self.get_pdf_scale_factor()
+        pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale))
+        img_data = pix.tobytes("ppm")
+        pdf.close()
+
+        pil_img = Image.open(io.BytesIO(img_data))
+        return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+
     def load_pdf_preview(self, pdf_path):
         """Load PDF pages for preview"""
         try:
@@ -433,21 +454,10 @@ class AppleStyleGUI:
             pdf = fitz.open(pdf_path)
             self.total_pages = len(pdf)
             self.pdf_pages = []
+            pdf.close()
 
             # Convert first page to image for preview
-            page = pdf[0]
-            scale = self.get_pdf_scale_factor()
-            pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale))
-            img_data = pix.tobytes("ppm")
-
-            # Convert to cv2 format
-            import io
-            from PIL import Image
-            pil_img = Image.open(io.BytesIO(img_data))
-            import numpy as np
-            self.original_image = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-
-            pdf.close()
+            self.original_image = self._pdf_page_to_image(pdf_path, 0)
 
             # Show page controls
             if self.total_pages > 1:
@@ -488,8 +498,8 @@ class AppleStyleGUI:
         if self.current_file and self.current_file.lower().endswith('.pdf'):
             self.page_cache[self.current_page] = {
                 'result': self.current_result,
-                'annotated_image': self.annotated_image.copy() if self.annotated_image is not None else None,
-                'original_image': self.original_image.copy() if self.original_image is not None else None
+                'annotated_image': self.annotated_image,
+                'original_image': self.original_image
             }
             print(f"[INFO] Saved page {self.current_page} state to cache")
 
@@ -516,20 +526,7 @@ class AppleStyleGUI:
                 return
 
             # If not in cache, render from PDF
-            import fitz
-            pdf = fitz.open(self.current_file)
-            page = pdf[page_num]
-            scale = self.get_pdf_scale_factor()
-            pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale))
-            img_data = pix.tobytes("ppm")
-
-            import io
-            from PIL import Image
-            import numpy as np
-            pil_img = Image.open(io.BytesIO(img_data))
-            self.original_image = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-
-            pdf.close()
+            self.original_image = self._pdf_page_to_image(self.current_file, page_num)
 
             # Clear annotated image and result for new page
             self.annotated_image = None
@@ -631,13 +628,26 @@ class AppleStyleGUI:
             self.display_image(img)
 
     def on_pdf_quality_changed(self, *args):
-        """Reload PDF when quality setting changes"""
+        """Reload PDF preview when quality setting changes"""
         if self.current_file and self.current_file.lower().endswith('.pdf') and not self.processing:
-            # Clear cache and reload with new quality
-            self.page_cache = {}
-            page_to_load = self.current_page
-            self.load_pdf_page(page_to_load)
-            print(f"[INFO] PDF reloaded with {self.pdf_quality_var.get()} quality")
+            # Only reload the current page preview, don't clear processed results
+            # Clear only the original images in cache (not OCR results)
+            for page_num in self.page_cache:
+                self.page_cache[page_num]['original_image'] = None
+
+            # Reload current page with new quality
+            try:
+                self.original_image = self._pdf_page_to_image(self.current_file, self.current_page)
+                # Update cache
+                if self.current_page in self.page_cache:
+                    self.page_cache[self.current_page]['original_image'] = self.original_image
+                # Redisplay
+                display_img = self.annotated_image if self.annotated_image is not None else self.original_image
+                if display_img is not None:
+                    self.display_image(display_img)
+                print(f"[INFO] PDF preview reloaded with {self.pdf_quality_var.get()} quality")
+            except Exception as e:
+                print(f"[ERROR] Failed to reload PDF: {e}")
 
     def on_settings_changed(self, *args):
         """Auto-reprocess when settings change"""
@@ -705,37 +715,39 @@ class AppleStyleGUI:
         analyze_path = self.current_file
         temp_image_path = None
 
-        if self.current_file.lower().endswith('.pdf'):
-            if self.original_image is not None:
-                # Save current page as temp image
-                import tempfile
-                temp_image_path = os.path.join(tempfile.gettempdir(),
-                                               f"ocr_pdf_page_{self.current_page}.jpg")
-                cv2.imwrite(temp_image_path, self.original_image)
-                analyze_path = temp_image_path
-                print(f"[INFO] Processing PDF page {self.current_page + 1}, saved as temp image: {temp_image_path}")
+        try:
+            if self.current_file.lower().endswith('.pdf'):
+                if self.original_image is not None:
+                    # Save current page as temp image
+                    import tempfile
+                    temp_image_path = os.path.join(tempfile.gettempdir(),
+                                                   f"ocr_pdf_page_{self.current_page}.jpg")
+                    cv2.imwrite(temp_image_path, self.original_image)
+                    analyze_path = temp_image_path
+                    print(f"[INFO] Processing PDF page {self.current_page + 1}, saved as temp image: {temp_image_path}")
 
-        result = self.analyzer.analyze(analyze_path)
+            result = self.analyzer.analyze(analyze_path)
 
-        # Clean up temp file
-        if temp_image_path and os.path.exists(temp_image_path):
-            try:
-                os.remove(temp_image_path)
-            except:
-                pass
+            # Set current_result immediately after analysis
+            self.current_result = result
 
-        # Set current_result immediately after analysis
-        self.current_result = result
+            self.root.after(0, lambda: self.update_status("🎨 Creating visualization..."))
+            self.create_visualization(result)
 
-        self.root.after(0, lambda: self.update_status("🎨 Creating visualization..."))
-        self.create_visualization(result)
+            self.root.after(0, lambda: self.display_results(result))
+            self.root.after(0, lambda: self.update_status("✓ Processing complete"))
 
-        self.root.after(0, lambda: self.display_results(result))
-        self.root.after(0, lambda: self.update_status("✓ Processing complete"))
+            # Save to cache if it's a PDF
+            if self.current_file.lower().endswith('.pdf'):
+                self.save_current_page_state()
 
-        # Save to cache if it's a PDF
-        if self.current_file.lower().endswith('.pdf'):
-            self.save_current_page_state()
+        finally:
+            # Always clean up temp file
+            if temp_image_path and os.path.exists(temp_image_path):
+                try:
+                    os.remove(temp_image_path)
+                except Exception as e:
+                    print(f"[WARN] Failed to remove temp file: {e}")
 
     def _process_all_pdf_pages(self):
         """Process all pages of a PDF document"""
@@ -763,19 +775,9 @@ class AppleStyleGUI:
                 continue
 
             # Render page from PDF
+            temp_image_path = None
             try:
-                pdf = fitz.open(self.current_file)
-                page = pdf[page_num]
-                scale = self.get_pdf_scale_factor()
-                pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale))
-                img_data = pix.tobytes("ppm")
-
-                import io
-                from PIL import Image
-                import numpy as np
-                pil_img = Image.open(io.BytesIO(img_data))
-                page_image = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-                pdf.close()
+                page_image = self._pdf_page_to_image(self.current_file, page_num)
 
                 # Save as temp image
                 temp_image_path = os.path.join(tempfile.gettempdir(),
@@ -784,13 +786,6 @@ class AppleStyleGUI:
 
                 # Analyze
                 result = self.analyzer.analyze(temp_image_path)
-
-                # Clean up
-                if os.path.exists(temp_image_path):
-                    try:
-                        os.remove(temp_image_path)
-                    except:
-                        pass
 
                 # Create visualization for this page
                 regions_viz = []
@@ -816,8 +811,8 @@ class AppleStyleGUI:
                 # Cache this page
                 self.page_cache[page_num] = {
                     'result': result,
-                    'annotated_image': annotated.copy(),
-                    'original_image': page_image.copy()
+                    'annotated_image': annotated,
+                    'original_image': page_image
                 }
 
                 all_results.append({
@@ -833,6 +828,13 @@ class AppleStyleGUI:
                     'page': page_num + 1,
                     'error': str(e)
                 })
+            finally:
+                # Always clean up temp file
+                if temp_image_path and os.path.exists(temp_image_path):
+                    try:
+                        os.remove(temp_image_path)
+                    except Exception as e:
+                        print(f"[WARN] Failed to remove temp file: {e}")
 
         # Display combined results
         self.root.after(0, lambda: self.update_status("📊 Compiling results..."))
@@ -935,8 +937,52 @@ class AppleStyleGUI:
         import json
         json_text.insert(tk.END, json.dumps(combined_data, indent=2, ensure_ascii=False))
 
+        # CSV tab - combined CSV
+        csv_text = self.text_widgets['csv']
+        csv_content = self._generate_csv_all_pages(all_results)
+        csv_text.insert(tk.END, csv_content)
+
         for text in self.text_widgets.values():
             text.config(state='disabled')
+
+    def _generate_csv_all_pages(self, all_results):
+        """Generate CSV format for all pages"""
+        import csv
+        from io import StringIO
+
+        output = StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(['Page', 'Region_ID', 'Type', 'Confidence', 'BBox_X1', 'BBox_Y1', 'BBox_X2', 'BBox_Y2', 'Text'])
+
+        # Data rows for each page
+        for page_data in all_results:
+            if 'error' not in page_data:
+                result = page_data['result']
+                page_num = page_data['page']
+
+                for i, region in enumerate(result.get('regions', []), 1):
+                    bbox = region.bbox
+                    text = region.text if hasattr(region, 'text') and region.text else ""
+                    # Clean text for CSV
+                    text_clean = text.replace('\n', ' ').replace('\r', ' ').strip()
+                    if len(text_clean) > 100:
+                        text_clean = text_clean[:100] + "..."
+
+                    writer.writerow([
+                        page_num,
+                        i,
+                        region.type,
+                        f"{region.confidence:.4f}",
+                        bbox[0] if len(bbox) > 0 else '',
+                        bbox[1] if len(bbox) > 1 else '',
+                        bbox[2] if len(bbox) > 2 else '',
+                        bbox[3] if len(bbox) > 3 else '',
+                        text_clean
+                    ])
+
+        return output.getvalue()
 
     def _finish_processing(self):
         """Clean up after processing"""
@@ -1047,31 +1093,84 @@ class AppleStyleGUI:
         json_text.insert(tk.END, json.dumps(ser, indent=2, ensure_ascii=False))
         json_text.config(state='disabled')
 
+        # CSV
+        csv_text = self.text_widgets['csv']
+        csv_content = self._generate_csv(result)
+        csv_text.insert(tk.END, csv_content)
+        csv_text.config(state='disabled')
+
         self.export_btn.config(state='normal')
 
+    def _generate_csv(self, result):
+        """Generate CSV format from result"""
+        import csv
+        from io import StringIO
+
+        output = StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(['Region_ID', 'Type', 'Confidence', 'BBox_X1', 'BBox_Y1', 'BBox_X2', 'BBox_Y2', 'Text'])
+
+        # Data rows
+        for i, region in enumerate(result.get('regions', []), 1):
+            bbox = region.bbox
+            text = region.text if hasattr(region, 'text') and region.text else ""
+            # Clean text for CSV (remove newlines and quotes)
+            text_clean = text.replace('\n', ' ').replace('\r', ' ').strip()
+            if len(text_clean) > 100:
+                text_clean = text_clean[:100] + "..."
+
+            writer.writerow([
+                i,
+                region.type,
+                f"{region.confidence:.4f}",
+                bbox[0] if len(bbox) > 0 else '',
+                bbox[1] if len(bbox) > 1 else '',
+                bbox[2] if len(bbox) > 2 else '',
+                bbox[3] if len(bbox) > 3 else '',
+                text_clean
+            ])
+
+        return output.getvalue()
+
     def export_results(self):
-        """Export"""
+        """Export results"""
         if not self.current_result:
             return
+
         filename = filedialog.asksaveasfilename(
             title="Export Results",
             defaultextension=".json",
-            filetypes=[("JSON Files", "*.json"), ("Text Files", "*.txt")]
+            filetypes=[
+                ("JSON Files", "*.json"),
+                ("CSV Files", "*.csv"),
+                ("Text Files", "*.txt")
+            ]
         )
         if not filename:
             return
+
         try:
-            ser = {
-                'method': self.current_result.get('method', ''),
-                'image_path': self.current_result.get('image_path', ''),
-                'timestamp': datetime.now().isoformat(),
-                'regions': [{'type': r.type, 'bbox': r.bbox, 'confidence': r.confidence,
-                            'text': r.text if hasattr(r, 'text') and r.text else ""}
-                           for r in self.current_result.get('regions', [])]
-            }
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(ser, f, indent=2, ensure_ascii=False)
-            messagebox.showinfo("Success", "Exported successfully")
+            if filename.lower().endswith('.csv'):
+                # Export CSV
+                csv_content = self._generate_csv(self.current_result)
+                with open(filename, 'w', encoding='utf-8', newline='') as f:
+                    f.write(csv_content)
+            else:
+                # Export JSON
+                ser = {
+                    'method': self.current_result.get('method', ''),
+                    'image_path': self.current_result.get('image_path', ''),
+                    'timestamp': datetime.now().isoformat(),
+                    'regions': [{'type': r.type, 'bbox': r.bbox, 'confidence': r.confidence,
+                                'text': r.text if hasattr(r, 'text') and r.text else ""}
+                               for r in self.current_result.get('regions', [])]
+                }
+                with open(filename, 'w', encoding='utf-8') as f:
+                    json.dump(ser, f, indent=2, ensure_ascii=False)
+
+            messagebox.showinfo("Success", f"Exported successfully to:\n{os.path.basename(filename)}")
         except Exception as e:
             messagebox.showerror("Error", f"Export failed:\n{e}")
 

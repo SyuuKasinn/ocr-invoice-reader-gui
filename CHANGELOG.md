@@ -4,7 +4,65 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [2.1.0] - 2026-05-14
+## [1.0.0] - 2026-05-14
+
+### 🎨 Apple-Style GUI with Advanced Features
+
+**Major Redesign:**
+- ✅ **Apple-Style Interface** - Clean, minimalist design inspired by macOS
+- ✅ **Split-Pane Layout** - 60% preview canvas + 40% results panel
+- ✅ **Professional Color Scheme** - Apple design system colors
+- ✅ **Drag & Drop** - File drag-drop onto preview canvas
+- ✅ **Real-time Visualization** - Annotated images displayed in canvas
+
+**Multi-Page PDF Support:**
+- ✅ **Page Navigation** - Previous/Next buttons for PDF pages
+- ✅ **Page Cache System** - Results cached for instant switching
+- ✅ **Batch Processing** - "Process All Pages" option
+- ✅ **Combined Results** - Multi-page CSV/JSON export
+
+**PDF Quality Control:**
+- ✅ **DPI Settings** - 144/216/288/300 DPI options
+- ✅ **Auto-Reload** - Preview updates when quality changes
+- ✅ **Smart Caching** - OCR results preserved during DPI changes
+
+**Enhanced Results Display:**
+- ✅ **Four View Tabs** - Summary, Regions, JSON, CSV
+- ✅ **CSV Export** - Built-in CSV generation
+- ✅ **Export Options** - Save as JSON or CSV file
+- ✅ **Structured Data** - Region type, bbox, confidence, text
+
+**Auto-Processing:**
+- ✅ **Settings Watch** - Auto-reprocess when language/GPU changes
+- ✅ **Smart Updates** - Only reprocesses if needed
+- ✅ **Preserved State** - Maintains zoom and current page
+
+**Code Quality:**
+- ✅ **DRY Improvements** - Eliminated duplicate PDF rendering code
+- ✅ **Better Resource Management** - Proper temp file cleanup with finally blocks
+- ✅ **Memory Optimization** - Removed unnecessary deep copies
+- ✅ **Error Handling** - File existence checks and validation
+
+**Core Engine Sync (v2.2.1+):**
+- ✅ **Table Detection** - Automatic fallback when tables not detected
+- ✅ **OCR Fallback** - Direct OCR for empty table regions
+- ✅ **Smart Validation** - Content sufficiency checks
+- ✅ **Region Type Stats** - Console output shows region distribution
+
+**Technical:**
+- 1177 lines of well-structured code
+- tkinterdnd2 for drag-and-drop
+- PyMuPDF for PDF rendering
+- Thread-based processing for responsive UI
+- Comprehensive error handling and logging
+
+**See Also:**
+- [SYNC_v2.2.1.md](SYNC_v2.2.1.md) - Core engine updates
+- [PDF_DPI_FIX.md](PDF_DPI_FIX.md) - PDF quality improvements
+
+---
+
+## [2.1.0] - 2026-05-14 (Deprecated)
 
 ### 🎨 Added Visualization
 

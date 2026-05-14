@@ -51,6 +51,9 @@ class AppleStyleGUI:
         self.current_page = 0
         self.total_pages = 0
 
+        # Cache for PDF page results
+        self.page_cache = {}  # {page_num: {'result': result, 'annotated_image': img, 'original_image': img}}
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -356,11 +359,12 @@ class AppleStyleGUI:
         self.update_status(f"Selected: {os.path.basename(path)}")
         self.process_btn.config(state='normal', bg=self.colors['accent'])
 
-        # Reset page controls
+        # Reset page controls and cache
         self.page_controls.pack_forget()
         self.pdf_pages = []
         self.current_page = 0
         self.total_pages = 0
+        self.page_cache = {}  # Clear cache when loading new file
 
         # Load preview
         try:
@@ -419,6 +423,8 @@ class AppleStyleGUI:
     def prev_page(self):
         """Go to previous page"""
         if self.current_page > 0:
+            # Save current page state before switching
+            self.save_current_page_state()
             self.current_page -= 1
             self.load_pdf_page(self.current_page)
             self.update_page_controls()
@@ -426,13 +432,45 @@ class AppleStyleGUI:
     def next_page(self):
         """Go to next page"""
         if self.current_page < self.total_pages - 1:
+            # Save current page state before switching
+            self.save_current_page_state()
             self.current_page += 1
             self.load_pdf_page(self.current_page)
             self.update_page_controls()
 
+    def save_current_page_state(self):
+        """Save current page state to cache"""
+        if self.current_file and self.current_file.lower().endswith('.pdf'):
+            self.page_cache[self.current_page] = {
+                'result': self.current_result,
+                'annotated_image': self.annotated_image.copy() if self.annotated_image is not None else None,
+                'original_image': self.original_image.copy() if self.original_image is not None else None
+            }
+            print(f"[INFO] Saved page {self.current_page} state to cache")
+
     def load_pdf_page(self, page_num):
         """Load specific PDF page"""
         try:
+            # Check if page is in cache
+            if page_num in self.page_cache:
+                print(f"[INFO] Loading page {page_num} from cache")
+                cached = self.page_cache[page_num]
+                self.original_image = cached['original_image']
+                self.annotated_image = cached['annotated_image']
+                self.current_result = cached['result']
+
+                # Display cached image (annotated if available, otherwise original)
+                display_img = self.annotated_image if self.annotated_image is not None else self.original_image
+                if display_img is not None:
+                    self.display_image(display_img)
+
+                # Restore results display
+                if self.current_result:
+                    self.display_results(self.current_result)
+
+                return
+
+            # If not in cache, render from PDF
             import fitz
             pdf = fitz.open(self.current_file)
             page = pdf[page_num]
@@ -446,7 +484,20 @@ class AppleStyleGUI:
             self.original_image = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
             pdf.close()
+
+            # Clear annotated image and result for new page
+            self.annotated_image = None
+            self.current_result = None
+
+            # Clear results display
+            for text in self.text_widgets.values():
+                text.config(state='normal')
+                text.delete(1.0, tk.END)
+                text.config(state='disabled')
+
             self.display_image(self.original_image)
+            print(f"[INFO] Loaded page {page_num} from PDF")
+
         except Exception as e:
             print(f"[ERROR] Failed to load page: {e}")
 
@@ -603,6 +654,10 @@ class AppleStyleGUI:
 
             self.root.after(0, lambda: self.display_results(result))
             self.root.after(0, lambda: self.update_status("✓ Processing complete"))
+
+            # Save to cache if it's a PDF
+            if self.current_file.lower().endswith('.pdf'):
+                self.save_current_page_state()
 
         except Exception as e:
             print(f"[ERROR] {e}")

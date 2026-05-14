@@ -131,6 +131,13 @@ class AppleStyleGUI:
                                      state='disabled')
         self.process_btn.pack(side=tk.LEFT)
 
+        # Progress bar (hidden by default)
+        self.progress_bar_frame = tk.Frame(btn_row, bg=self.colors['bg'])
+        self.progress_bar = ttk.Progressbar(self.progress_bar_frame,
+                                           mode='indeterminate',
+                                           length=150)
+        self.progress_bar.pack(padx=(15,0))
+
         # Main content - SPLIT VIEW
         content = tk.Frame(self.root, bg=self.colors['bg'])
         content.pack(fill=tk.BOTH, expand=True)
@@ -542,55 +549,54 @@ class AppleStyleGUI:
             return
 
         self.processing = True
-        self.process_btn.config(state='disabled', text="Processing...")
+        self.process_btn.config(state='disabled')
+
+        # Show progress bar
+        self.progress_bar_frame.pack(side=tk.LEFT)
+        self.progress_bar.start(10)
+
         self.update_status("⏳ Processing...")
 
-        # Start progress animation
-        self.progress_dots = 0
-        self.animate_progress()
-
         threading.Thread(target=self._process_thread, daemon=True).start()
-
-    def animate_progress(self):
-        """Animate processing indicator"""
-        if self.processing:
-            dots = "." * (self.progress_dots % 4)
-            self.process_btn.config(text=f"Processing{dots}")
-            self.progress_dots += 1
-            self.root.after(500, self.animate_progress)
 
     def _process_thread(self):
         """Process thread"""
         try:
             if not self.analyzer:
-                self.root.after(0, lambda: self.update_status("Loading OCR engine..."))
+                self.root.after(0, lambda: self.update_status("🔄 Loading OCR engine..."))
                 from ocr_invoice_reader.processors.enhanced_structure_analyzer import EnhancedStructureAnalyzer
                 self.analyzer = EnhancedStructureAnalyzer(
                     use_gpu=self.gpu_var.get(),
                     lang=self.lang_var.get()
                 )
 
-            self.root.after(0, lambda: self.update_status("Analyzing..."))
+            self.root.after(0, lambda: self.update_status("🔍 Analyzing document structure..."))
             result = self.analyzer.analyze(self.current_file)
 
             # Set current_result immediately after analysis
             self.current_result = result
 
-            self.root.after(0, lambda: self.update_status("Creating visualization..."))
+            self.root.after(0, lambda: self.update_status("🎨 Creating visualization..."))
             self.create_visualization(result)
 
             self.root.after(0, lambda: self.display_results(result))
-            self.root.after(0, lambda: self.update_status("✓ Complete"))
+            self.root.after(0, lambda: self.update_status("✓ Processing complete"))
 
         except Exception as e:
             print(f"[ERROR] {e}")
             import traceback
             traceback.print_exc()
             self.root.after(0, lambda: messagebox.showerror("Error", str(e)))
-            self.root.after(0, lambda: self.update_status("✗ Failed"))
+            self.root.after(0, lambda: self.update_status("❌ Processing failed"))
         finally:
             self.processing = False
-            self.root.after(0, lambda: self.process_btn.config(state='normal', text='Process Document'))
+            self.root.after(0, self._finish_processing)
+
+    def _finish_processing(self):
+        """Clean up after processing"""
+        self.process_btn.config(state='normal')
+        self.progress_bar.stop()
+        self.progress_bar_frame.pack_forget()
 
     def create_visualization(self, result):
         """Create visualization"""

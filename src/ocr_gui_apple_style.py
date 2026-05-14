@@ -101,19 +101,24 @@ class AppleStyleGUI:
 
         tk.Button(btn_row, text="Select File",
                  command=self.browse_file,
-                 font=('Arial', 12),
+                 font=('Arial', 12, 'bold'),
                  bg=self.colors['bg_secondary'],
                  fg=self.colors['text_primary'],
+                 activebackground='#E8E8ED',
+                 activeforeground=self.colors['text_primary'],
                  relief='flat', cursor='hand2',
-                 padx=20, pady=8).pack(side=tk.LEFT, padx=(0,10))
+                 padx=20, pady=10).pack(side=tk.LEFT, padx=(0,10))
 
         self.process_btn = tk.Button(btn_row, text="Process Document",
                                      command=self.process_document,
                                      font=('Arial', 12, 'bold'),
                                      bg=self.colors['accent'],
-                                     fg='white',
+                                     fg='#FFFFFF',
+                                     activebackground='#0051D5',
+                                     activeforeground='#FFFFFF',
+                                     disabledforeground='#FFFFFF',
                                      relief='flat', cursor='hand2',
-                                     padx=25, pady=8,
+                                     padx=25, pady=10,
                                      state='disabled')
         self.process_btn.pack(side=tk.LEFT)
 
@@ -143,11 +148,13 @@ class AppleStyleGUI:
                          ("Reset", self.reset_zoom),
                          ("+", lambda: self.zoom(1.2))]:
             tk.Button(zoom_frame, text=txt, command=cmd,
-                     font=('Arial', 12),
+                     font=('Arial', 13, 'bold'),
                      bg=self.colors['bg_secondary'],
+                     fg=self.colors['text_primary'],
+                     activebackground='#E8E8ED',
                      relief='flat', cursor='hand2',
                      width=5 if txt=="Reset" else 3,
-                     pady=4).pack(side=tk.LEFT, padx=2)
+                     pady=5).pack(side=tk.LEFT, padx=2)
 
         # File label
         self.file_label = tk.Label(left_panel, text="No file selected",
@@ -157,7 +164,7 @@ class AppleStyleGUI:
                                    anchor='w')
         self.file_label.pack(fill=tk.X, padx=30, pady=(5,10))
 
-        # Canvas for image
+        # Canvas for image with drag-drop
         canvas_frame = tk.Frame(left_panel, bg=self.colors['separator'], bd=1)
         canvas_frame.pack(fill=tk.BOTH, expand=True, padx=30, pady=(0,30))
 
@@ -166,12 +173,20 @@ class AppleStyleGUI:
                                highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=1, pady=1)
 
+        # Placeholder with drag hint
         self.canvas_placeholder = self.canvas.create_text(
             400, 300,
-            text="Select a file to preview\nVisualization will appear here after processing",
-            font=('Arial', 14),
+            text="📄 Drag & Drop file here\n\nor click 'Select File' button",
+            font=('Arial', 16),
             fill=self.colors['text_secondary'],
             justify='center')
+
+        # Enable drag-drop on canvas
+        if DND_AVAILABLE:
+            self.canvas.drop_target_register(DND_FILES)
+            self.canvas.dnd_bind('<<Drop>>', self.on_file_drop)
+            self.canvas.dnd_bind('<<DragEnter>>', self.on_drag_enter)
+            self.canvas.dnd_bind('<<DragLeave>>', self.on_drag_leave)
 
         # SEPARATOR
         tk.Frame(content, bg=self.colors['separator'], width=1).pack(side=tk.LEFT, fill=tk.Y)
@@ -193,11 +208,14 @@ class AppleStyleGUI:
 
         self.export_btn = tk.Button(result_header, text="Export",
                                     command=self.export_results,
-                                    font=('Arial', 11),
+                                    font=('Arial', 11, 'bold'),
                                     bg=self.colors['accent'],
-                                    fg='white',
+                                    fg='#FFFFFF',
+                                    activebackground='#0051D5',
+                                    activeforeground='#FFFFFF',
+                                    disabledforeground='#FFFFFF',
                                     relief='flat', cursor='hand2',
-                                    padx=20, pady=6,
+                                    padx=20, pady=8,
                                     state='disabled')
         self.export_btn.pack(side=tk.RIGHT)
 
@@ -286,7 +304,7 @@ class AppleStyleGUI:
         self.file_label.config(text=f"📄 {os.path.basename(path)}",
                               fg=self.colors['text_primary'])
         self.update_status(f"Selected: {os.path.basename(path)}")
-        self.process_btn.config(state='normal')
+        self.process_btn.config(state='normal', bg=self.colors['accent'])
 
         # Load preview
         try:
@@ -299,6 +317,22 @@ class AppleStyleGUI:
                     self.display_image(self.original_image)
         except:
             pass
+
+    def on_file_drop(self, event):
+        """Handle file drop"""
+        files = self.root.tk.splitlist(event.data)
+        if files:
+            file_path = files[0].strip('{}')
+            if file_path.lower().endswith(('.pdf', '.jpg', '.jpeg', '.png')):
+                self.load_file(file_path)
+
+    def on_drag_enter(self, event):
+        """Drag enter - highlight canvas"""
+        self.canvas.config(bg='#e6f2ff')
+
+    def on_drag_leave(self, event):
+        """Drag leave - reset canvas"""
+        self.canvas.config(bg=self.colors['bg_secondary'])
 
     def display_image(self, cv_img):
         """Display image on canvas"""
@@ -343,9 +377,22 @@ class AppleStyleGUI:
             return
 
         self.processing = True
-        self.process_btn.config(state='disabled')
-        self.update_status("Processing...")
+        self.process_btn.config(state='disabled', text="Processing...")
+        self.update_status("⏳ Processing...")
+
+        # Start progress animation
+        self.progress_dots = 0
+        self.animate_progress()
+
         threading.Thread(target=self._process_thread, daemon=True).start()
+
+    def animate_progress(self):
+        """Animate processing indicator"""
+        if self.processing:
+            dots = "." * (self.progress_dots % 4)
+            self.process_btn.config(text=f"Processing{dots}")
+            self.progress_dots += 1
+            self.root.after(500, self.animate_progress)
 
     def _process_thread(self):
         """Process thread"""
@@ -375,7 +422,7 @@ class AppleStyleGUI:
             self.root.after(0, lambda: self.update_status("✗ Failed"))
         finally:
             self.processing = False
-            self.root.after(0, lambda: self.process_btn.config(state='normal'))
+            self.root.after(0, lambda: self.process_btn.config(state='normal', text='Process Document'))
 
     def create_visualization(self, result):
         """Create visualization"""

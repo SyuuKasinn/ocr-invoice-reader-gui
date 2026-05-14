@@ -522,14 +522,14 @@ class AppleStyleGUI:
     def zoom(self, factor):
         """Zoom"""
         self.zoom_level = max(0.1, min(5.0, self.zoom_level * factor))
-        img = self.annotated_image if self.annotated_image else self.original_image
+        img = self.annotated_image if self.annotated_image is not None else self.original_image
         if img is not None:
             self.display_image(img)
 
     def reset_zoom(self):
         """Reset zoom"""
         self.zoom_level = 1.0
-        img = self.annotated_image if self.annotated_image else self.original_image
+        img = self.annotated_image if self.annotated_image is not None else self.original_image
         if img is not None:
             self.display_image(img)
 
@@ -571,7 +571,29 @@ class AppleStyleGUI:
                 )
 
             self.root.after(0, lambda: self.update_status("🔍 Analyzing document structure..."))
-            result = self.analyzer.analyze(self.current_file)
+
+            # For PDF, save current page as temp image and analyze that
+            analyze_path = self.current_file
+            temp_image_path = None
+
+            if self.current_file.lower().endswith('.pdf'):
+                if self.original_image is not None:
+                    # Save current page as temp image
+                    import tempfile
+                    temp_image_path = os.path.join(tempfile.gettempdir(),
+                                                   f"ocr_pdf_page_{self.current_page}.jpg")
+                    cv2.imwrite(temp_image_path, self.original_image)
+                    analyze_path = temp_image_path
+                    print(f"[INFO] Processing PDF page {self.current_page + 1}, saved as temp image: {temp_image_path}")
+
+            result = self.analyzer.analyze(analyze_path)
+
+            # Clean up temp file
+            if temp_image_path and os.path.exists(temp_image_path):
+                try:
+                    os.remove(temp_image_path)
+                except:
+                    pass
 
             # Set current_result immediately after analysis
             self.current_result = result

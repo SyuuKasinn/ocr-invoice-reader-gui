@@ -18,6 +18,13 @@ import tempfile
 from pathlib import Path
 from datetime import datetime
 
+try:
+    from tkinterdnd2 import DND_FILES, TkinterDnD
+    DND_AVAILABLE = True
+except ImportError:
+    DND_AVAILABLE = False
+    print("[INFO] tkinterdnd2 not available, drag-and-drop disabled")
+
 class SimpleOCRGUI:
     def __init__(self, root):
         self.root = root
@@ -51,20 +58,69 @@ class SimpleOCRGUI:
         file_frame = ttk.LabelFrame(self.root, text="1. Select File", padding=10)
         file_frame.pack(fill=tk.X, padx=10, pady=5)
 
-        self.file_label = tk.Label(
+        # Drop zone area (visual indicator)
+        drop_zone = tk.Frame(
             file_frame,
-            text="No file selected",
-            fg="gray",
-            wraplength=700
+            bg="#f0f8ff",
+            relief=tk.GROOVE,
+            bd=2,
+            height=80
         )
-        self.file_label.pack(side=tk.LEFT, padx=5)
+        drop_zone.pack(fill=tk.X, padx=5, pady=5)
+        drop_zone.pack_propagate(False)
 
+        # Drop zone content
+        drop_content = tk.Frame(drop_zone, bg="#f0f8ff")
+        drop_content.place(relx=0.5, rely=0.5, anchor='center')
+
+        tk.Label(
+            drop_content,
+            text="📁",
+            font=("Arial", 24),
+            bg="#f0f8ff",
+            fg="#4CAF50"
+        ).pack()
+
+        tk.Label(
+            drop_content,
+            text="Drag & Drop file here or click Browse",
+            font=("Arial", 11),
+            bg="#f0f8ff",
+            fg="#666"
+        ).pack()
+
+        self.file_label = tk.Label(
+            drop_content,
+            text="",
+            font=("Arial", 9, "italic"),
+            bg="#f0f8ff",
+            fg="gray"
+        )
+        self.file_label.pack(pady=(5,0))
+
+        # Make drop zone clickable
+        def on_drop_zone_click(event):
+            self.browse_file()
+
+        drop_zone.bind("<Button-1>", on_drop_zone_click)
+        for widget in drop_content.winfo_children():
+            widget.bind("<Button-1>", on_drop_zone_click)
+
+        # Enable drag-and-drop if available
+        if DND_AVAILABLE:
+            self.drop_zone = drop_zone
+            drop_zone.drop_target_register(DND_FILES)
+            drop_zone.dnd_bind('<<Drop>>', self.on_file_drop)
+            drop_zone.dnd_bind('<<DragEnter>>', self.on_drag_enter)
+            drop_zone.dnd_bind('<<DragLeave>>', self.on_drag_leave)
+
+        # Browse button
         browse_btn = ttk.Button(
             file_frame,
-            text="Browse...",
+            text="📂 Browse Files...",
             command=self.browse_file
         )
-        browse_btn.pack(side=tk.RIGHT, padx=5)
+        browse_btn.pack(pady=(5,0))
 
         # Settings frame
         settings_frame = ttk.LabelFrame(self.root, text="2. Settings", padding=10)
@@ -149,11 +205,41 @@ class SimpleOCRGUI:
         )
 
         if file_path:
-            self.current_file = file_path
-            file_name = os.path.basename(file_path)
-            self.file_label.config(text=f"📄 {file_name}", fg="black")
-            self.process_btn.config(state="normal")
-            self.status_var.set(f"File loaded: {file_name}")
+            self.load_file(file_path)
+
+    def load_file(self, file_path):
+        """Load a file (from browse or drag-drop)"""
+        # Validate file type
+        valid_extensions = ('.pdf', '.jpg', '.jpeg', '.png')
+        if not file_path.lower().endswith(valid_extensions):
+            messagebox.showwarning("Invalid File", "Please select a PDF or image file (JPG, PNG)")
+            return
+
+        self.current_file = file_path
+        file_name = os.path.basename(file_path)
+        self.file_label.config(text=f"📄 {file_name}", fg="black")
+        self.process_btn.config(state="normal")
+        self.status_var.set(f"File loaded: {file_name}")
+
+    def on_file_drop(self, event):
+        """Handle file drop event"""
+        # Get dropped file path (tkinterdnd2 returns it in curly braces)
+        files = self.root.tk.splitlist(event.data)
+        if files:
+            file_path = files[0]
+            # Remove curly braces if present
+            file_path = file_path.strip('{}')
+            self.load_file(file_path)
+
+    def on_drag_enter(self, event):
+        """Visual feedback when drag enters drop zone"""
+        if hasattr(self, 'drop_zone'):
+            self.drop_zone.config(bg="#e0f0ff", relief=tk.SOLID, bd=3)
+
+    def on_drag_leave(self, event):
+        """Reset visual feedback when drag leaves"""
+        if hasattr(self, 'drop_zone'):
+            self.drop_zone.config(bg="#f0f8ff", relief=tk.GROOVE, bd=2)
 
     def process_document(self):
         """Process document in background thread"""
@@ -354,7 +440,12 @@ class SimpleOCRGUI:
 
 def main():
     """Main entry point"""
-    root = tk.Tk()
+    # Use TkinterDnD if available for drag-and-drop support
+    if DND_AVAILABLE:
+        root = TkinterDnD.Tk()
+    else:
+        root = tk.Tk()
+
     app = SimpleOCRGUI(root)
     root.mainloop()
 

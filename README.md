@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![PaddleOCR](https://img.shields.io/badge/PaddleOCR-v4-orange)](https://github.com/PaddlePaddle/PaddleOCR)
-[![Core Version](https://img.shields.io/badge/core-v2.2.1+-brightgreen)](https://github.com/SyuuKasinn/ocr-invoice-reader)
+[![Core Version](https://img.shields.io/badge/core-v2.3.0-brightgreen)](https://github.com/SyuuKasinn/ocr-invoice-reader)
 
 ---
 
@@ -214,22 +214,34 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## 📋 Latest Updates (2026-05-14)
 
-### Core Engine Improvements (v2.2.1+)
+### Core Engine Improvements (v2.3.0)
 The GUI automatically benefits from these ocr-invoice-reader updates:
 
-1. **🔧 Forced Coordinate Analysis** (Commit `8233af2`)
-   - Automatically uses coordinate-based analysis when no tables detected
-   - Fixes missing table content on invoice pages
-   - Better handling of complex layouts
+1. **🚀 Smart GPU Detection & Auto-Fallback** (Commit `aef841b`)
+   - Three-level GPU verification (CUDA support, device count, actual usage test)
+   - Automatic CPU fallback when GPU unavailable
+   - No more crashes due to missing GPU
+   - Clear console warnings when fallback occurs
 
-2. **🔧 OCR Fallback for Empty Tables** (Commit `bdf98c6`)
-   - Detects empty table regions from PP-Structure
-   - Automatically runs OCR directly on table region
-   - Extracts content even when HTML parsing fails
+2. **🖼️ Image Optimizer** (New `ImageOptimizer` class)
+   - Optional image preprocessing for faster OCR
+   - Smart resizing (max 2000px, min 800px)
+   - Optional: denoise, contrast enhancement, sharpening
+   - Can be enabled with `optimize_images=True` parameter
 
-3. **🐛 AttributeError Fix** (Commit `a9973b5`)
-   - Fixed `.type` vs `.region_type` attribute access
-   - More stable region processing
+3. **🐛 Unicode Encoding Fix** (Commit `b4da5f7`)
+   - Replaced emoji warnings with plain text
+   - No more cp932 codec errors on Windows
+
+4. **✅ Full Verification** (Commit `1b6736c`)
+   - All 11 PDF pages tested and verified
+   - Complete table extraction
+   - No empty table issues
+
+5. **🔧 Previous Updates** (v2.2.1+)
+   - Forced coordinate analysis when no tables detected
+   - OCR fallback for empty tables
+   - AttributeError fixes
 
 ### GUI Features (v1.0.0)
 - ✅ Apple-style interface with split-pane layout
@@ -238,8 +250,9 @@ The GUI automatically benefits from these ocr-invoice-reader updates:
 - ✅ Auto-reprocessing on settings change
 - ✅ CSV export alongside JSON
 - ✅ PDF quality control (144-300 DPI)
+- ✅ Automatic GPU detection (no crashes on non-GPU systems)
 
-**See [SYNC_v2.2.1.md](SYNC_v2.2.1.md) for detailed update information.**
+**See [SYNC_v2.3.0.md](SYNC_v2.3.0.md) for detailed update information.**
 
 ---
 

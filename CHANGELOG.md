@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.1] - 2026-05-14
+
+### 🔄 Core Engine Sync (v2.3.0)
+
+**Automatic Updates from ocr-invoice-reader:**
+
+- ✅ **Smart GPU Detection & Auto-Fallback**
+  - Three-level GPU verification
+  - Automatic CPU fallback when GPU unavailable
+  - No crashes on non-GPU systems
+  - Clear warning messages
+
+- ✅ **Image Optimizer Available**
+  - Optional image preprocessing (`ImageOptimizer` class)
+  - Smart resizing, denoise, contrast enhancement
+  - Can be enabled with `optimize_images=True`
+  - Useful for large/low-quality images
+
+- ✅ **Unicode Encoding Fix**
+  - Replaced emoji warnings with plain text
+  - No more cp932 codec errors on Windows console
+
+- ✅ **Full Verification**
+  - All 11 PDF pages tested
+  - Complete table extraction verified
+  - No empty table issues
+
+**Documentation:**
+- Added [SYNC_v2.3.0.md](SYNC_v2.3.0.md) - Core engine v2.3.0 updates
+- Updated README.md - Latest core version badge
+
+**Note:** GUI code unchanged - all improvements inherited through API.
+
+---
+
 ## [1.0.0] - 2026-05-14
 
 ### 🎨 Apple-Style GUI with Advanced Features

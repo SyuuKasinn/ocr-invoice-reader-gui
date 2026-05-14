@@ -187,10 +187,7 @@ class SimpleOCRGUI:
             self.update_status(f"Processing: {os.path.basename(self.current_file)}")
             print(f"[INFO] Analyzing document: {self.current_file}")
 
-            result = self.analyzer.analyze(
-                self.current_file,
-                visualize=False  # Don't create viz in simple mode
-            )
+            result = self.analyzer.analyze(self.current_file)
 
             print(f"[INFO] Analysis complete. Regions found: {len(result.get('regions', []))}")
 

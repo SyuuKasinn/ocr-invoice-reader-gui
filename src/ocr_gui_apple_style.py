@@ -118,9 +118,9 @@ class AppleStyleGUI:
                 bg=self.colors['bg'],
                 fg=self.colors['text_secondary']).pack(side=tk.LEFT, padx=(0,8))
 
-        self.pdf_quality_var = tk.StringVar(value='2x')
+        self.pdf_quality_var = tk.StringVar(value='4x')
         self.pdf_quality_combo = ttk.Combobox(settings_row, textvariable=self.pdf_quality_var,
-                    values=['2x (144 DPI)', '3x (216 DPI)', '4x (288 DPI)'],
+                    values=['2x (144 DPI)', '3x (216 DPI)', '4x (288 DPI)', '300 DPI'],
                     state='readonly', width=13)
         self.pdf_quality_combo.pack(side=tk.LEFT)
         self.pdf_quality_combo.config(state='disabled')
@@ -417,7 +417,9 @@ class AppleStyleGUI:
     def get_pdf_scale_factor(self):
         """Get PDF rendering scale factor from quality setting"""
         quality = self.pdf_quality_var.get()
-        if '3x' in quality:
+        if '300 DPI' in quality:
+            return 300 / 72  # ≈ 4.17x
+        elif '3x' in quality:
             return 3
         elif '4x' in quality:
             return 4

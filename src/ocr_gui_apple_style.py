@@ -100,6 +100,10 @@ class AppleStyleGUI:
                       font=('Arial', 11),
                       bg=self.colors['bg']).pack(side=tk.LEFT)
 
+        # Add callbacks to reprocess on settings change
+        self.lang_var.trace_add('write', self.on_settings_changed)
+        self.gpu_var.trace_add('write', self.on_settings_changed)
+
         # Buttons
         btn_row = tk.Frame(controls, bg=self.colors['bg'])
         btn_row.pack(anchor='e')
@@ -521,6 +525,15 @@ class AppleStyleGUI:
         img = self.annotated_image if self.annotated_image else self.original_image
         if img is not None:
             self.display_image(img)
+
+    def on_settings_changed(self, *args):
+        """Auto-reprocess when settings change"""
+        # Only reprocess if we have already processed this file
+        if self.current_file and self.current_result and not self.processing:
+            # Reset analyzer to apply new settings
+            self.analyzer = None
+            # Auto-reprocess
+            self.process_document()
 
     def process_document(self):
         """Process"""

@@ -762,26 +762,39 @@ class ModernOCRGUI:
         try:
             if self.ocr_analyzer:
                 # Use pre-loaded analyzer (fast!)
-                result = self.ocr_analyzer.analyze(
+                # Process the document
+                mode = self.mode_var.get()
+                lang = self.lang_var.get()
+
+                # Call OCR process
+                result = self.ocr_analyzer.process(
                     self.current_file,
-                    lang=self.lang_var.get(),
+                    mode=mode,
+                    lang=lang,
                     visualize=self.visualize_var.get()
                 )
+
                 self.current_result = result
                 self.root.after(0, self._display_results, result)
             else:
                 # Try to load analyzer now if not pre-loaded
                 self.root.after(0, lambda: self.status_var.set("⚠️ Loading OCR engine..."))
                 try:
-                    from ocr_invoice_reader.processors.enhanced_structure_analyzer import EnhancedStructureAnalyzer
-                    self.ocr_analyzer = EnhancedStructureAnalyzer(use_gpu=self.use_gpu_var.get(), lang=self.lang_var.get())
+                    from ocr_invoice_reader import OCRInvoiceReader
+
+                    self.ocr_analyzer = OCRInvoiceReader(use_gpu=self.use_gpu_var.get())
 
                     # Now process with newly loaded analyzer
-                    result = self.ocr_analyzer.analyze(
+                    mode = self.mode_var.get()
+                    lang = self.lang_var.get()
+
+                    result = self.ocr_analyzer.process(
                         self.current_file,
-                        lang=self.lang_var.get(),
+                        mode=mode,
+                        lang=lang,
                         visualize=self.visualize_var.get()
                     )
+
                     self.current_result = result
                     self.root.after(0, self._display_results, result)
                 except Exception as load_error:
@@ -874,27 +887,26 @@ def load_ocr_engine(splash):
 
     try:
         splash.update_status("Loading OCR modules...")
+        time.sleep(0.2)
+
+        # Import from ocr-invoice-reader
+        from ocr_invoice_reader import OCRInvoiceReader
+
+        splash.update_status("Initializing PaddleOCR engine...")
+        time.sleep(0.2)
+
+        # Initialize OCR reader with CPU by default
+        analyzer = OCRInvoiceReader(use_gpu=False)
+
+        splash.update_status("✅ OCR engine ready! (Pre-loaded)")
         time.sleep(0.3)
+        return analyzer
 
-        # Try to import the enhanced structure analyzer
-        try:
-            from ocr_invoice_reader.processors.enhanced_structure_analyzer import EnhancedStructureAnalyzer
-            splash.update_status("Initializing PaddleOCR v4 engine...")
-            time.sleep(0.3)
-
-            # Initialize with CPU by default (more compatible)
-            analyzer = EnhancedStructureAnalyzer(use_gpu=False, lang='ch')
-
-            splash.update_status("✅ OCR engine ready! (Pre-loaded for 5x speed)")
-            time.sleep(0.5)
-            return analyzer
-
-        except ImportError as ie:
-            splash.update_status("⚠️ OCR library not found, will load on-demand...")
-            print(f"Import error: {ie}")
-            time.sleep(1)
-            return None
-
+    except ImportError as ie:
+        splash.update_status("⚠️ OCR library not found, will load on-demand...")
+        print(f"Import error: {ie}")
+        time.sleep(1)
+        return None
     except Exception as e:
         splash.update_status(f"⚠️ Engine load error, will retry on first use")
         print(f"Error loading OCR: {e}")

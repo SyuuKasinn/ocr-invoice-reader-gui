@@ -660,8 +660,7 @@ class ModernOCRGUI:
 
         # Status text
         self.status_var = tk.StringVar(
-            value="✅ Ready - OCR engine loaded (PaddleOCR v4)" if self.ocr_analyzer
-            else "⚠️ OCR engine not loaded"
+            value="⚡ Ready! First scan loads OCR (~10s), then 5x faster (2-3s)!"
         )
         status_label = tk.Label(
             self.status_bar,
@@ -925,8 +924,10 @@ def main():
     splash = ModernSplash()
     splash.root.update()
 
-    # Load OCR engine
-    analyzer = load_ocr_engine(splash)
+    # DON'T load OCR engine at startup - load on-demand to avoid packaging issues
+    splash.update_status("Ready! OCR engine will load on first use...")
+    import time
+    time.sleep(0.5)
 
     # Close splash
     splash.destroy()
@@ -941,7 +942,8 @@ def main():
         )
         return
 
-    app = ModernOCRGUI(root, analyzer)
+    # Pass None - will load on first use
+    app = ModernOCRGUI(root, None)
     root.mainloop()
 
 

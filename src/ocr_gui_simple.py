@@ -232,17 +232,41 @@ class SimpleOCRGUI:
 
             for i, region in enumerate(result['regions'], 1):
                 self.results_text.insert(tk.END, f"Region {i}:\n")
-                self.results_text.insert(tk.END, f"  Type: {region.get('type', 'unknown')}\n")
-                self.results_text.insert(tk.END, f"  Text: {region.get('text', '')[:100]}\n")
-                if len(region.get('text', '')) > 100:
-                    self.results_text.insert(tk.END, "  ...\n")
+                self.results_text.insert(tk.END, f"  Type: {region.type}\n")
+                self.results_text.insert(tk.END, f"  BBox: {region.bbox}\n")
+                self.results_text.insert(tk.END, f"  Confidence: {region.confidence:.2%}\n")
+
+                # Display text content if available
+                text_content = region.text if hasattr(region, 'text') and region.text else ""
+                if text_content:
+                    preview = text_content[:200]
+                    self.results_text.insert(tk.END, f"  Text: {preview}\n")
+                    if len(text_content) > 200:
+                        self.results_text.insert(tk.END, "  ...\n")
+
                 self.results_text.insert(tk.END, "\n")
 
-        # Full JSON (collapsed)
+        # Full details (serialize LayoutRegion objects)
         self.results_text.insert(tk.END, "\n" + "="*80 + "\n")
-        self.results_text.insert(tk.END, "FULL JSON OUTPUT:\n")
+        self.results_text.insert(tk.END, "DETAILED OUTPUT:\n")
         self.results_text.insert(tk.END, "="*80 + "\n")
-        formatted_json = json.dumps(result, indent=2, ensure_ascii=False)
+
+        # Convert LayoutRegion objects to dicts for JSON serialization
+        serializable_result = {
+            'method': result.get('method', ''),
+            'image_path': result.get('image_path', ''),
+            'regions': [
+                {
+                    'type': r.type,
+                    'bbox': r.bbox,
+                    'confidence': r.confidence,
+                    'text': r.text if hasattr(r, 'text') and r.text else ""
+                }
+                for r in result.get('regions', [])
+            ]
+        }
+
+        formatted_json = json.dumps(serializable_result, indent=2, ensure_ascii=False)
         self.results_text.insert(tk.END, formatted_json)
 
     def update_status(self, message):

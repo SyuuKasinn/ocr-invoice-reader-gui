@@ -105,16 +105,30 @@ class AppleStyleGUI:
 
         # Process all pages option (for PDFs)
         self.process_all_pages_var = tk.BooleanVar(value=False)
-        self.process_all_checkbox = tk.Checkbutton(settings_row, text="Process All Pages (PDF)",
+        self.process_all_checkbox = tk.Checkbutton(settings_row, text="Process All Pages",
                                                    variable=self.process_all_pages_var,
                                                    font=('Arial', 11),
                                                    bg=self.colors['bg'],
                                                    state='disabled')
-        self.process_all_checkbox.pack(side=tk.LEFT)
+        self.process_all_checkbox.pack(side=tk.LEFT, padx=(0,15))
+
+        # PDF quality option
+        tk.Label(settings_row, text="PDF Quality",
+                font=('Arial', 11),
+                bg=self.colors['bg'],
+                fg=self.colors['text_secondary']).pack(side=tk.LEFT, padx=(0,8))
+
+        self.pdf_quality_var = tk.StringVar(value='2x')
+        self.pdf_quality_combo = ttk.Combobox(settings_row, textvariable=self.pdf_quality_var,
+                    values=['2x (144 DPI)', '3x (216 DPI)', '4x (288 DPI)'],
+                    state='readonly', width=13)
+        self.pdf_quality_combo.pack(side=tk.LEFT)
+        self.pdf_quality_combo.config(state='disabled')
 
         # Add callbacks to reprocess on settings change
         self.lang_var.trace_add('write', self.on_settings_changed)
         self.gpu_var.trace_add('write', self.on_settings_changed)
+        self.pdf_quality_var.trace_add('write', self.on_pdf_quality_changed)
 
         # Buttons
         btn_row = tk.Frame(controls, bg=self.colors['bg'])
@@ -375,12 +389,14 @@ class AppleStyleGUI:
         self.total_pages = 0
         self.page_cache = {}  # Clear cache when loading new file
 
-        # Enable/disable "Process All Pages" checkbox
+        # Enable/disable PDF-specific options
         if path.lower().endswith('.pdf'):
             self.process_all_checkbox.config(state='normal')
+            self.pdf_quality_combo.config(state='readonly')
         else:
             self.process_all_checkbox.config(state='disabled')
             self.process_all_pages_var.set(False)
+            self.pdf_quality_combo.config(state='disabled')
 
         # Load preview
         try:
@@ -398,6 +414,16 @@ class AppleStyleGUI:
         except Exception as e:
             print(f"[ERROR] Failed to load file: {e}")
 
+    def get_pdf_scale_factor(self):
+        """Get PDF rendering scale factor from quality setting"""
+        quality = self.pdf_quality_var.get()
+        if '3x' in quality:
+            return 3
+        elif '4x' in quality:
+            return 4
+        else:
+            return 2  # Default 2x
+
     def load_pdf_preview(self, pdf_path):
         """Load PDF pages for preview"""
         try:
@@ -408,7 +434,8 @@ class AppleStyleGUI:
 
             # Convert first page to image for preview
             page = pdf[0]
-            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x scale
+            scale = self.get_pdf_scale_factor()
+            pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale))
             img_data = pix.tobytes("ppm")
 
             # Convert to cv2 format
@@ -490,7 +517,8 @@ class AppleStyleGUI:
             import fitz
             pdf = fitz.open(self.current_file)
             page = pdf[page_num]
-            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+            scale = self.get_pdf_scale_factor()
+            pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale))
             img_data = pix.tobytes("ppm")
 
             import io
@@ -599,6 +627,15 @@ class AppleStyleGUI:
         img = self.annotated_image if self.annotated_image is not None else self.original_image
         if img is not None:
             self.display_image(img)
+
+    def on_pdf_quality_changed(self, *args):
+        """Reload PDF when quality setting changes"""
+        if self.current_file and self.current_file.lower().endswith('.pdf') and not self.processing:
+            # Clear cache and reload with new quality
+            self.page_cache = {}
+            page_to_load = self.current_page
+            self.load_pdf_page(page_to_load)
+            print(f"[INFO] PDF reloaded with {self.pdf_quality_var.get()} quality")
 
     def on_settings_changed(self, *args):
         """Auto-reprocess when settings change"""
@@ -727,7 +764,8 @@ class AppleStyleGUI:
             try:
                 pdf = fitz.open(self.current_file)
                 page = pdf[page_num]
-                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                scale = self.get_pdf_scale_factor()
+                pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale))
                 img_data = pix.tobytes("ppm")
 
                 import io

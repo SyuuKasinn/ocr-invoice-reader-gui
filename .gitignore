@@ -38,3 +38,7 @@ ENV/
 # Results
 results/
 output/
+
+# Backup copies (use git history instead)
+*.backup
+*_backup.py

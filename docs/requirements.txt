@@ -7,10 +7,10 @@
 #   pip install -e .
 
 # Core dependencies (auto-installed with ocr-invoice-reader)
-paddleocr>=2.8.1
+paddleocr>=3.0.0
 paddlepaddle>=3.0.0
-opencv-python>=4.5.0
+opencv-python>=4.8.1  # <4.8.1 bundles a vulnerable libwebp
 pymupdf>=1.23.0
 pydantic>=2.0.0
 numpy>=1.21.0
-pillow>=9.0.0
+pillow>=13.0.0

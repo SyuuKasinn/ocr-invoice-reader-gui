@@ -1,6 +1,6 @@
 # GUI Dependencies
 tkinterdnd2>=0.3.0
-Pillow>=10.0.0
+Pillow>=13.0.0  # older versions have known CVEs; needs Python 3.11+
 
 # OCR Invoice Reader (install from local or GitHub)
 # Install the main OCR package first:
